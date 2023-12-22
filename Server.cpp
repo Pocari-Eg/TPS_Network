@@ -83,6 +83,9 @@ int main() {
                 else {
                     // Echo the received data back to the client
                     send(events[i].data.fd, buffer, bytesRead, 0);
+
+                    // 추가: 서버에서 클라이언트로 데이터 전송
+                    send(events[i].data.fd, "Server: Data received and echoed", 30, 0);
                 }
             }
         }
