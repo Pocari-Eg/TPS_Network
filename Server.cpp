@@ -1,106 +1,49 @@
 #include <iostream>
-#include <cstring>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <sys/epoll.h>
+#include <boost/asio.hpp>
 
-const int MAX_EVENTS = 10;
-const int PORT = 7777;
+using namespace boost::asio;
+using ip::tcp;
+
+void handle_read(const boost::system::error_code& error, size_t bytes_transferred, std::array<char, 1024>& data, tcp::socket& socket) {
+    if (!error) {
+        std::cout << "Received data: " << std::string(data.data(), bytes_transferred) << std::endl;
+
+        // Echo the received data back to the client
+        async_write(socket, buffer(data, bytes_transferred),
+            [&](const boost::system::error_code& write_error, size_t /*bytes_written*/) {
+                if (write_error) {
+                    std::cerr << "Error during write: " << write_error.message() << std::endl;
+                }
+            });
+    }
+    else {
+        std::cerr << "Error during read: " << error.message() << std::endl;
+    }
+}
 
 int main() {
-    int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket == -1) {
-        std::cerr << "Error creating socket\n";
-        return -1;
+    try {
+        boost::asio::io_service io_service;
+
+        // Server
+        tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), 7777));
+        tcp::socket server_socket(io_service);
+
+        std::cout << "Waiting for connection..." << std::endl;
+        acceptor.accept(server_socket);
+        std::cout << "Connection established." << std::endl;
+
+        std::array<char, 1024> data;
+
+        // Read data from the client
+        server_socket.async_read_some(buffer(data), boost::bind(handle_read, placeholders::error, placeholders::bytes_transferred, data, server_socket));
+
+        // Run the io_service to handle asynchronous operations
+        io_service.run();
     }
-
-    sockaddr_in serverAddr{};
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
-    serverAddr.sin_port = htons(PORT);
-
-    if (bind(serverSocket, reinterpret_cast<struct sockaddr*>(&serverAddr), sizeof(serverAddr)) == -1) {
-        std::cerr << "Error binding socket\n";
-        close(serverSocket);
-        return -1;
+    catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
     }
-
-    if (listen(serverSocket, 5) == -1) {
-        std::cerr << "Error listening on socket\n";
-        close(serverSocket);
-        return -1;
-    }
-
-    int epollFd = epoll_create1(0);
-    if (epollFd == -1) {
-        std::cerr << "Error creating epoll file descriptor\n";
-        close(serverSocket);
-        return -1;
-    }
-
-    epoll_event event;
-    event.events = EPOLLIN;
-    event.data.fd = serverSocket;
-
-    if (epoll_ctl(epollFd, EPOLL_CTL_ADD, serverSocket, &event) == -1) {
-        std::cerr << "Error adding server socket to epoll\n";
-        close(serverSocket);
-        close(epollFd);
-        return -1;
-    }
-
-    std::cout << "Server listening on port " << PORT << "...\n";
-
-    while (true) {
-        epoll_event events[MAX_EVENTS];
-        int numEvents = epoll_wait(epollFd, events, MAX_EVENTS, -1);
-
-        for (int i = 0; i < numEvents; ++i) {
-            if (events[i].data.fd == serverSocket) {
-                // Accept new connection
-                sockaddr_in clientAddr{};
-                socklen_t clientAddrLen = sizeof(clientAddr);
-                int clientSocket = accept(serverSocket, reinterpret_cast<struct sockaddr*>(&clientAddr), &clientAddrLen);
-
-                event.events = EPOLLIN | EPOLLET;  // Edge-triggered mode
-                event.data.fd = clientSocket;
-
-                epoll_ctl(epollFd, EPOLL_CTL_ADD, clientSocket, &event);
-
-                std::cout << "New connection from " << inet_ntoa(clientAddr.sin_addr) << ":" << ntohs(clientAddr.sin_port) << "\n";
-            }
-            else {
-                // Handle data from existing connection
-                char buffer[1024];
-                int bytesRead = 0;
-
-                while (true) {
-                    bytesRead = recv(events[i].data.fd, buffer, sizeof(buffer) - 1, 0);
-
-                    if (bytesRead <= 0) {
-                        // Connection closed or error
-                        close(events[i].data.fd);
-                        std::cout << "Connection closed\n";
-                        break;
-                    }
-                    else {
-                        // Null-terminate the received data
-                        buffer[bytesRead] = '\0';
-
-                        // Display received message
-                        std::cout << "Received message from client: " << buffer << std::endl;
-
-                        // Echo the received data back to the client
-                        send(events[i].data.fd, buffer, bytesRead, 0);
-                    }
-                }
-            }
-        }
-    }
-
-    close(serverSocket);
-    close(epollFd);
 
     return 0;
 }
