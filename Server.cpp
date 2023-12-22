@@ -95,10 +95,18 @@ private:
 int main() {
     try {
         io_service io_service;
-        Server server(io_service, 7777);
+        tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), 7777));
 
-        // 비동기 작업 처리
-        io_service.run();
+        for (;;) {
+            tcp::socket socket(io_service);
+            acceptor.accept(socket);
+
+            std::cout << "Client connected." << std::endl;
+
+            // 클라이언트에게 "Welcome" 메시지를 보냅니다.
+            std::string welcomeMessage = "Welcome";
+            write(socket, buffer(welcomeMessage + "\n"));
+        }
     }
     catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
