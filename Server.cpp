@@ -95,7 +95,6 @@ private:
 int main() {
     try {
         io_service io_service;
-        tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), 7777));
 
         Server server(io_service, 7777);
 
