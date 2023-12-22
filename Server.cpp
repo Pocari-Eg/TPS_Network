@@ -61,7 +61,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("Server is listening on port 8080...\n");
+    printf("Server is listening on port 7777...\n");
 
     while (1) {
         // Wait for events
