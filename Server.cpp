@@ -95,11 +95,8 @@ private:
 int main() {
     try {
         io_service io_service;
+        tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), 7777));
 
-        Server server(io_service, 7777);
-
-        // 비동기 작업 처리
-        io_service.run();
         for (;;) {
             tcp::socket socket(io_service);
             acceptor.accept(socket);
@@ -109,10 +106,10 @@ int main() {
             // 클라이언트에게 "Welcome" 메시지를 보냅니다.
             std::string welcomeMessage = "Welcome";
             write(socket, buffer(welcomeMessage + "\n"));
+
+            // 이후에 서버 코드를 계속 실행하도록 하려면 아래의 주석을 해제합니다.
+             io_service.run();
         }
-
-
-    }
     catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }
