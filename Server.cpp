@@ -37,9 +37,24 @@ private:
                 if (!ec) {
                     std::cout << "Received from client: " << data_ << "\n";
                     doRead();
+                    // 클라이언트로 다시 데이터를 보내기
+                    doSend();
                 }
                 else {
                     std::cerr << "Write error: " << ec.message() << "\n";
+                }
+            });
+    }
+
+    void doSend() {
+        auto self(shared_from_this());
+        std::string message = "Server says: I received your message.";
+        async_write(
+            socket_,
+            buffer(message),
+            [this, self](boost::system::error_code ec, std::size_t /* length */) {
+                if (ec) {
+                    std::cerr << "Send error: " << ec.message() << "\n";
                 }
             });
     }
