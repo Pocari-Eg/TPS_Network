@@ -2,129 +2,94 @@
 #include <cstring>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #include <sys/epoll.h>
 
-#define MAX_BUFFER_SIZE 1024
-#define SERVER_PORT 7777
-#define MAX_EVENTS 10
-
-void HandleClient(int clientSocket);
+const int MAX_EVENTS = 10;
+const int PORT = 7777;
 
 int main() {
-    int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (listenSocket == -1) {
-        std::cerr << "Failed to create socket\n";
-        return 1;
+    int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocket == -1) {
+        std::cerr << "Error creating socket\n";
+        return -1;
     }
 
-    sockaddr_in serverAddr;
-    std::memset(&serverAddr, 0, sizeof(serverAddr));
+    sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
-    serverAddr.sin_port = htons(SERVER_PORT);
+    serverAddr.sin_port = htons(PORT);
 
-    if (bind(listenSocket, reinterpret_cast<struct sockaddr*>(&serverAddr), sizeof(serverAddr)) == -1) {
-        std::cerr << "Failed to bind socket\n";
-        close(listenSocket);
-        return 1;
+    if (bind(serverSocket, reinterpret_cast<struct sockaddr*>(&serverAddr), sizeof(serverAddr)) == -1) {
+        std::cerr << "Error binding socket\n";
+        close(serverSocket);
+        return -1;
     }
 
-    if (listen(listenSocket, SOMAXCONN) == -1) {
-        std::cerr << "Failed to listen\n";
-        close(listenSocket);
-        return 1;
+    if (listen(serverSocket, 5) == -1) {
+        std::cerr << "Error listening on socket\n";
+        close(serverSocket);
+        return -1;
     }
-
-    std::cout << "Server listening on port " << SERVER_PORT << "\n";
 
     int epollFd = epoll_create1(0);
     if (epollFd == -1) {
-        std::cerr << "Failed to create epoll file descriptor\n";
-        close(listenSocket);
-        return 1;
+        std::cerr << "Error creating epoll file descriptor\n";
+        close(serverSocket);
+        return -1;
     }
 
-    struct epoll_event event;
-    event.events = EPOLLIN | EPOLLET;
-    event.data.fd = listenSocket;
+    epoll_event event;
+    event.events = EPOLLIN;
+    event.data.fd = serverSocket;
 
-    if (epoll_ctl(epollFd, EPOLL_CTL_ADD, listenSocket, &event) == -1) {
-        std::cerr << "Failed to add listen socket to epoll\n";
-        close(listenSocket);
+    if (epoll_ctl(epollFd, EPOLL_CTL_ADD, serverSocket, &event) == -1) {
+        std::cerr << "Error adding server socket to epoll\n";
+        close(serverSocket);
         close(epollFd);
-        return 1;
+        return -1;
     }
 
-    struct epoll_event* events = new struct epoll_event[MAX_EVENTS];
+    std::cout << "Server listening on port " << PORT << "...\n";
 
     while (true) {
+        epoll_event events[MAX_EVENTS];
         int numEvents = epoll_wait(epollFd, events, MAX_EVENTS, -1);
-        if (numEvents == -1) {
-            std::cerr << "epoll_wait failed\n";
-            break;
-        }
 
         for (int i = 0; i < numEvents; ++i) {
-            if (events[i].data.fd == listenSocket) {
-                // New client connection
-                sockaddr_in clientAddr;
+            if (events[i].data.fd == serverSocket) {
+                // Accept new connection
+                sockaddr_in clientAddr{};
                 socklen_t clientAddrLen = sizeof(clientAddr);
-                int clientSocket = accept(listenSocket, reinterpret_cast<struct sockaddr*>(&clientAddr), &clientAddrLen);
-                if (clientSocket == -1) {
-                    std::cerr << "Failed to accept connection\n";
-                    continue;
-                }
+                int clientSocket = accept(serverSocket, reinterpret_cast<struct sockaddr*>(&clientAddr), &clientAddrLen);
 
-                std::cout << "Client connected from " << inet_ntoa(clientAddr.sin_addr) << ":" << ntohs(clientAddr.sin_port) << "\n";
-
-                fcntl(clientSocket, F_SETFL, O_NONBLOCK);
-
-                event.events = EPOLLIN | EPOLLET;
+                event.events = EPOLLIN | EPOLLET;  // Edge-triggered mode
                 event.data.fd = clientSocket;
-                if (epoll_ctl(epollFd, EPOLL_CTL_ADD, clientSocket, &event) == -1) {
-                    std::cerr << "Failed to add client socket to epoll\n";
-                    close(clientSocket);
-                    continue;
-                }
+
+                epoll_ctl(epollFd, EPOLL_CTL_ADD, clientSocket, &event);
+
+                std::cout << "New connection from " << inet_ntoa(clientAddr.sin_addr) << ":" << ntohs(clientAddr.sin_port) << "\n";
             }
             else {
-                // Data available to read from a client
-                int clientSocket = events[i].data.fd;
-                HandleClient(clientSocket);
+                // Handle data from existing connection
+                char buffer[1024];
+                int bytesRead = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
+
+                if (bytesRead <= 0) {
+                    // Connection closed or error
+                    close(events[i].data.fd);
+                    std::cout << "Connection closed\n";
+                }
+                else {
+                    // Echo the received data back to the client
+                    send(events[i].data.fd, buffer, bytesRead, 0);
+                }
             }
         }
     }
 
-    close(listenSocket);
+    close(serverSocket);
     close(epollFd);
-    delete[] events;
 
     return 0;
-}
-
-void HandleClient(int clientSocket) {
-    char buffer[MAX_BUFFER_SIZE];
-    ssize_t bytesRead = recv(clientSocket, buffer, MAX_BUFFER_SIZE, 0);
-    if (bytesRead == -1) {
-        std::cerr << "recv failed\n";
-        close(clientSocket);
-        return;
-    }
-    else if (bytesRead == 0) {
-        std::cout << "Client disconnected\n";
-        close(clientSocket);
-        return;
-    }
-
-    std::cout << "Received data from client: " << buffer << "\n";
-
-    // Echo the received data back to the client
-    ssize_t bytesSent = send(clientSocket, buffer, bytesRead, 0);
-    if (bytesSent == -1) {
-        std::cerr << "send failed\n";
-        close(clientSocket);
-        return;
-    }
-
-    std::cout << "Data sent to client successfully\n";
 }
