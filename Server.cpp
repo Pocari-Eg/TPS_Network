@@ -78,14 +78,29 @@ private:
             socket_,
             [this](boost::system::error_code ec) {
                 if (!ec) {
-                    std::make_shared<Session>(std::move(socket_))->start();
+                    std::cout << "Client connected." << std::endl;
+
+                    // 클라이언트에게 "Welcome" 메시지를 보냅니다.
+                    std::string welcomeMessage = "Welcome";
+                    async_write(
+                        socket_,
+                        buffer(welcomeMessage + "\n"),
+                        [this](boost::system::error_code ec, std::size_t /* length */) {
+                            if (ec) {
+                                std::cerr << "Welcome message error: " << ec.message() << "\n";
+                            }
+                            else {
+                                // 클라이언트에게 환영 메시지를 성공적으로 보냈을 때
+                                std::make_shared<Session>(std::move(socket_))->start();
+                            }
+                        });
                 }
                 else {
                     std::cerr << "Accept error: " << ec.message() << "\n";
                 }
 
+                // 다시 accept 대기
                 doAccept();
-            });
     }
 
     tcp::acceptor acceptor_;
@@ -95,21 +110,11 @@ private:
 int main() {
     try {
         io_service io_service;
-        tcp::acceptor acceptor(io_service, tcp::endpoint(tcp::v4(), 7777));
+        Server server(io_service, 7777);
 
-        for (;;) {
-            tcp::socket socket(io_service);
-            acceptor.accept(socket);
-
-            std::cout << "Client connected." << std::endl;
-
-            // 클라이언트에게 "Welcome" 메시지를 보냅니다.
-            std::string welcomeMessage = "Welcome";
-            write(socket, buffer(welcomeMessage + "\n"));
-
-            // 이후에 서버 코드를 계속 실행하도록 하려면 아래의 주석을 해제합니다.
-             io_service.run();
-        }
+        // io_service.run()를 통해 이벤트 루프를 시작합니다.
+        io_service.run();
+    }
     catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }
