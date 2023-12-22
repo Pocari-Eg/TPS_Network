@@ -73,20 +73,27 @@ int main() {
             else {
                 // Handle data from existing connection
                 char buffer[1024];
-                int bytesRead = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
+                int bytesRead = 0;
 
-                if (bytesRead <= 0) {
-                    // Connection closed or error
-                    close(events[i].data.fd);
-                    std::cout << "Connection closed\n";
-                }
-                else {
-                    // Display received message
-                    buffer[bytesRead] = '\0';  // Ensure null-termination
-                    std::cout << "Received message from client: " << buffer << std::endl;
+                while (true) {
+                    bytesRead = recv(events[i].data.fd, buffer, sizeof(buffer) - 1, 0);
 
-                    // Echo the received data back to the client
-                    send(events[i].data.fd, buffer, bytesRead, 0);
+                    if (bytesRead <= 0) {
+                        // Connection closed or error
+                        close(events[i].data.fd);
+                        std::cout << "Connection closed\n";
+                        break;
+                    }
+                    else {
+                        // Null-terminate the received data
+                        buffer[bytesRead] = '\0';
+
+                        // Display received message
+                        std::cout << "Received message from client: " << buffer << std::endl;
+
+                        // Echo the received data back to the client
+                        send(events[i].data.fd, buffer, bytesRead, 0);
+                    }
                 }
             }
         }
