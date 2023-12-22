@@ -1,124 +1,130 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <iostream>
+#include <cstring>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <sys/socket.h>
 #include <sys/epoll.h>
 
-#define MAX_EVENTS 10
 #define MAX_BUFFER_SIZE 1024
+#define SERVER_PORT 7777
+#define MAX_EVENTS 10
+
+void HandleClient(int clientSocket);
 
 int main() {
-    int serverSocket, clientSocket, epollfd, eventsCount;
-    struct sockaddr_in serverAddr, clientAddr;
-    socklen_t clientLen = sizeof(clientAddr);
-    struct epoll_event ev, events[MAX_EVENTS];
-    char buffer[MAX_BUFFER_SIZE];
-
-    // Create TCP socket
-    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket == -1) {
-        perror("Error creating socket");
-        exit(EXIT_FAILURE);
+    int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (listenSocket == -1) {
+        std::cerr << "Failed to create socket\n";
+        return 1;
     }
 
-    // Set up the server address structure
-    memset(&serverAddr, 0, sizeof(serverAddr));
+    sockaddr_in serverAddr;
+    std::memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
-    serverAddr.sin_port = htons(7777);
+    serverAddr.sin_port = htons(SERVER_PORT);
 
-    // Bind the socket to the address and port
-    if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
-        perror("Error binding socket");
-        close(serverSocket);
-        exit(EXIT_FAILURE);
+    if (bind(listenSocket, reinterpret_cast<struct sockaddr*>(&serverAddr), sizeof(serverAddr)) == -1) {
+        std::cerr << "Failed to bind socket\n";
+        close(listenSocket);
+        return 1;
     }
 
-    // Listen for incoming connections
-    if (listen(serverSocket, 5) == -1) {
-        perror("Error listening on socket");
-        close(serverSocket);
-        exit(EXIT_FAILURE);
+    if (listen(listenSocket, SOMAXCONN) == -1) {
+        std::cerr << "Failed to listen\n";
+        close(listenSocket);
+        return 1;
     }
 
-    // Create epoll instance
-    epollfd = epoll_create1(0);
-    if (epollfd == -1) {
-        perror("Error creating epoll instance");
-        close(serverSocket);
-        exit(EXIT_FAILURE);
+    std::cout << "Server listening on port " << SERVER_PORT << "\n";
+
+    int epollFd = epoll_create1(0);
+    if (epollFd == -1) {
+        std::cerr << "Failed to create epoll file descriptor\n";
+        close(listenSocket);
+        return 1;
     }
 
-    // Add the server socket to the epoll instance
-    ev.events = EPOLLIN;
-    ev.data.fd = serverSocket;
-    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, serverSocket, &ev) == -1) {
-        perror("Error adding server socket to epoll");
-        close(serverSocket);
-        close(epollfd);
-        exit(EXIT_FAILURE);
+    struct epoll_event event;
+    event.events = EPOLLIN | EPOLLET;
+    event.data.fd = listenSocket;
+
+    if (epoll_ctl(epollFd, EPOLL_CTL_ADD, listenSocket, &event) == -1) {
+        std::cerr << "Failed to add listen socket to epoll\n";
+        close(listenSocket);
+        close(epollFd);
+        return 1;
     }
 
-    printf("Server is listening on port 7777...\n");
+    struct epoll_event* events = new struct epoll_event[MAX_EVENTS];
 
-    while (1) {
-        // Wait for events
-        eventsCount = epoll_wait(epollfd, events, MAX_EVENTS, -1);
-        if (eventsCount == -1) {
-            perror("Error waiting for events");
+    while (true) {
+        int numEvents = epoll_wait(epollFd, events, MAX_EVENTS, -1);
+        if (numEvents == -1) {
+            std::cerr << "epoll_wait failed\n";
             break;
         }
 
-        // Handle events
-        for (int i = 0; i < eventsCount; i++) {
-            if (events[i].data.fd == serverSocket) {
-                // Accept incoming connection
-                clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientLen);
+        for (int i = 0; i < numEvents; ++i) {
+            if (events[i].data.fd == listenSocket) {
+                // New client connection
+                sockaddr_in clientAddr;
+                socklen_t clientAddrLen = sizeof(clientAddr);
+                int clientSocket = accept(listenSocket, reinterpret_cast<struct sockaddr*>(&clientAddr), &clientAddrLen);
                 if (clientSocket == -1) {
-                    perror("Error accepting connection");
-                    break;
+                    std::cerr << "Failed to accept connection\n";
+                    continue;
                 }
 
-                printf("New connection from %s\n", inet_ntoa(clientAddr.sin_addr));
+                std::cout << "Client connected from " << inet_ntoa(clientAddr.sin_addr) << ":" << ntohs(clientAddr.sin_port) << "\n";
 
-                // Add the new client socket to the epoll instance
-                ev.events = EPOLLIN;
-                ev.data.fd = clientSocket;
-                if (epoll_ctl(epollfd, EPOLL_CTL_ADD, clientSocket, &ev) == -1) {
-                    perror("Error adding client socket to epoll");
+                fcntl(clientSocket, F_SETFL, O_NONBLOCK);
+
+                event.events = EPOLLIN | EPOLLET;
+                event.data.fd = clientSocket;
+                if (epoll_ctl(epollFd, EPOLL_CTL_ADD, clientSocket, &event) == -1) {
+                    std::cerr << "Failed to add client socket to epoll\n";
                     close(clientSocket);
+                    continue;
                 }
             }
             else {
-                // Handle data from clients
-                int bytesRead = read(events[i].data.fd, buffer, MAX_BUFFER_SIZE);
-                if (bytesRead <= 0) {
-                    // Connection closed or error
-                    if (bytesRead == 0) {
-                        printf("Connection closed by client\n");
-                    }
-                    else {
-                        perror("Error reading from client socket");
-                    }
-
-                    // Remove the client socket from the epoll instance
-                    epoll_ctl(epollfd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
-                    close(events[i].data.fd);
-                }
-                else {
-                    // Process the received data (in this example, just print it)
-                    buffer[bytesRead] = '\0';
-                    printf("Received data from client %s: %s", inet_ntoa(clientAddr.sin_addr), buffer);
-                }
+                // Data available to read from a client
+                int clientSocket = events[i].data.fd;
+                HandleClient(clientSocket);
             }
         }
     }
 
-    // Clean up
-    close(serverSocket);
-    close(epollfd);
+    close(listenSocket);
+    close(epollFd);
+    delete[] events;
 
     return 0;
+}
+
+void HandleClient(int clientSocket) {
+    char buffer[MAX_BUFFER_SIZE];
+    ssize_t bytesRead = recv(clientSocket, buffer, MAX_BUFFER_SIZE, 0);
+    if (bytesRead == -1) {
+        std::cerr << "recv failed\n";
+        close(clientSocket);
+        return;
+    }
+    else if (bytesRead == 0) {
+        std::cout << "Client disconnected\n";
+        close(clientSocket);
+        return;
+    }
+
+    std::cout << "Received data from client: " << buffer << "\n";
+
+    // Echo the received data back to the client
+    ssize_t bytesSent = send(clientSocket, buffer, bytesRead, 0);
+    if (bytesSent == -1) {
+        std::cerr << "send failed\n";
+        close(clientSocket);
+        return;
+    }
+
+    std::cout << "Data sent to client successfully\n";
 }
