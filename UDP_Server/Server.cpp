@@ -1,66 +1,124 @@
-#include <iostream>
-#include <cstring>
-#include <cstdlib>
-#include <arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/epoll.h>
 
-const int PORT = 7777;
-const int BUFFER_SIZE = 1024;
+#define MAX_EVENTS 10
+#define MAX_BUFFER_SIZE 1024
 
 int main() {
-    int sockfd;
-    struct sockaddr_in server_addr, client_addr;
-    socklen_t client_len = sizeof(client_addr);
-    char buffer[BUFFER_SIZE];
+    int serverSocket, clientSocket, epollfd, eventsCount;
+    struct sockaddr_in serverAddr, clientAddr;
+    socklen_t clientLen = sizeof(clientAddr);
+    struct epoll_event ev, events[MAX_EVENTS];
+    char buffer[MAX_BUFFER_SIZE];
 
-    // 소켓 생성
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-        perror("Socket creation failed");
+    // Create TCP socket
+    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocket == -1) {
+        perror("Error creating socket");
         exit(EXIT_FAILURE);
     }
 
-    // 서버 주소 설정
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_addr.sin_port = htons(PORT);
+    // Set up the server address structure
+    memset(&serverAddr, 0, sizeof(serverAddr));
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+    serverAddr.sin_port = htons(7777);
 
-    // 소켓에 주소 할당
-    if (bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
-        perror("Socket bind failed");
-        close(sockfd);
+    // Bind the socket to the address and port
+    if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+        perror("Error binding socket");
+        close(serverSocket);
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "Server listening on port " << PORT << std::endl;
+    // Listen for incoming connections
+    if (listen(serverSocket, 5) == -1) {
+        perror("Error listening on socket");
+        close(serverSocket);
+        exit(EXIT_FAILURE);
+    }
 
-    while (true) {
-        // 클라이언트로부터 데이터 수신
-        ssize_t recv_len = recvfrom(sockfd, buffer, sizeof(buffer), 0,
-            (struct sockaddr*)&client_addr, &client_len);
+    // Create epoll instance
+    epollfd = epoll_create1(0);
+    if (epollfd == -1) {
+        perror("Error creating epoll instance");
+        close(serverSocket);
+        exit(EXIT_FAILURE);
+    }
 
-        if (recv_len == -1) {
-            perror("Error in receiving data");
-            continue;
+    // Add the server socket to the epoll instance
+    ev.events = EPOLLIN;
+    ev.data.fd = serverSocket;
+    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, serverSocket, &ev) == -1) {
+        perror("Error adding server socket to epoll");
+        close(serverSocket);
+        close(epollfd);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Server is listening on port 8080...\n");
+
+    while (1) {
+        // Wait for events
+        eventsCount = epoll_wait(epollfd, events, MAX_EVENTS, -1);
+        if (eventsCount == -1) {
+            perror("Error waiting for events");
+            break;
         }
 
-        // 수신한 데이터를 화면에 출력
-        buffer[recv_len] = '\0';
-        std::cout << "Received message from " << inet_ntoa(client_addr.sin_addr) << ": " << buffer << std::endl;
+        // Handle events
+        for (int i = 0; i < eventsCount; i++) {
+            if (events[i].data.fd == serverSocket) {
+                // Accept incoming connection
+                clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientLen);
+                if (clientSocket == -1) {
+                    perror("Error accepting connection");
+                    break;
+                }
 
-        // 클라이언트에게 데이터 송신
-        const char* response = "Hello from server!";
-        ssize_t send_len = sendto(sockfd, response, strlen(response), 0,
-            (struct sockaddr*)&client_addr, client_len);
+                printf("New connection from %s\n", inet_ntoa(clientAddr.sin_addr));
 
-        if (send_len == -1) {
-            perror("Error in sending data");
-            continue;
+                // Add the new client socket to the epoll instance
+                ev.events = EPOLLIN;
+                ev.data.fd = clientSocket;
+                if (epoll_ctl(epollfd, EPOLL_CTL_ADD, clientSocket, &ev) == -1) {
+                    perror("Error adding client socket to epoll");
+                    close(clientSocket);
+                }
+            }
+            else {
+                // Handle data from clients
+                int bytesRead = read(events[i].data.fd, buffer, MAX_BUFFER_SIZE);
+                if (bytesRead <= 0) {
+                    // Connection closed or error
+                    if (bytesRead == 0) {
+                        printf("Connection closed by client\n");
+                    }
+                    else {
+                        perror("Error reading from client socket");
+                    }
+
+                    // Remove the client socket from the epoll instance
+                    epoll_ctl(epollfd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
+                    close(events[i].data.fd);
+                }
+                else {
+                    // Process the received data (in this example, just print it)
+                    buffer[bytesRead] = '\0';
+                    printf("Received data from client %s: %s", inet_ntoa(clientAddr.sin_addr), buffer);
+                }
+            }
         }
     }
 
-    // 소켓 닫기
-    close(sockfd);
+    // Clean up
+    close(serverSocket);
+    close(epollfd);
 
     return 0;
 }
