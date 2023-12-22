@@ -48,7 +48,7 @@ private:
 
     void doSend() {
         auto self(shared_from_this());
-        std::string message = "Server says: I received your message.";
+        std::string message = "I received your message.";
         async_write(
             socket_,
             buffer(message),
