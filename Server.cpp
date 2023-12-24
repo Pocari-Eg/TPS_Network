@@ -16,7 +16,12 @@ int main() {
             ip::tcp::socket socket(io_service);
             acceptor.accept(socket);
 
-            std::cout << "Client connected." << std::endl;
+            // 클라이언트 정보 획득
+            ip::tcp::endpoint clientEndpoint = socket.remote_endpoint();
+            std::string clientIP = clientEndpoint.address().to_string();
+            unsigned short clientPort = clientEndpoint.port();
+
+            std::cout << "Client connected from " << clientIP << ":" << clientPort << std::endl;
 
             try {
                 for (;;) {
@@ -26,10 +31,14 @@ int main() {
 
                     if (bytesRead == 0) {
                         // 클라이언트가 연결을 종료함
-                        std::cout << "Client disconnected." << std::endl;
+                        std::cout << "Client disconnected: " << clientIP << ":" << clientPort << std::endl;
                         break;
                     }
 
+                    // 클라이언트가 보낸 메시지 출력
+                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << std::string(data.data(), bytesRead) << std::endl;
+
+                    // 클라이언트에게 메시지 다시 전송
                     socket.write_some(buffer(data, bytesRead));
                 }
             }
