@@ -3,39 +3,57 @@
 
 using namespace boost::asio;
 
-class Server {
+class EchoSession : public std::enable_shared_from_this<EchoSession> {
 public:
-    Server(io_context& ioContext, unsigned short port)
+    EchoSession(ip::tcp::socket socket) : socket(std::move(socket)) {}
+
+    void start() {
+        readData();
+    }
+
+private:
+    void readData() {
+        auto self(shared_from_this());
+        async_read_until(socket, buffer(data, max_length), '\n',
+            [this, self](boost::system::error_code ec, std::size_t length) {
+                if (!ec) {
+                    writeData(length);
+                }
+            });
+    }
+
+    void writeData(std::size_t length) {
+        auto self(shared_from_this());
+        async_write(socket, buffer(data, length),
+            [this, self](boost::system::error_code ec, std::size_t /* length */) {
+                if (!ec) {
+                    readData();  // 다음 데이터를 기다림
+                }
+            });
+    }
+
+private:
+    ip::tcp::socket socket;
+    enum { max_length = 1024 };
+    char data[max_length];
+};
+
+class EchoServer {
+public:
+    EchoServer(io_context& ioContext, unsigned short port)
         : ioContext(ioContext), acceptor(ioContext, ip::tcp::endpoint(ip::tcp::v4(), port)) {
         startAccept();
     }
 
 private:
     void startAccept() {
-        // 새로운 소켓 생성
-        auto socket = std::make_shared<ip::tcp::socket>(ioContext);
-
-        // 비동기 연결 수락 시작
-        acceptor.async_accept(*socket,
-            [this, socket](boost::system::error_code ec) {
+        acceptor.async_accept(
+            [this](boost::system::error_code ec, ip::tcp::socket socket) {
                 if (!ec) {
-                    std::cout << "Accepted connection from: " << socket->remote_endpoint() << std::endl;
-
-                    // 클라이언트와의 통신을 위한 세션 시작
-                    startSession(socket);
+                    std::make_shared<EchoSession>(std::move(socket))->start();
                 }
-                else {
-                    std::cerr << "Accept error: " << ec.message() << std::endl;
-                }
-
-                // 다시 연결을 대기
-                startAccept();
+                startAccept();  // 다음 연결 대기
             });
-    }
-
-    void startSession(std::shared_ptr<ip::tcp::socket> socket) {
-        // 클라이언트와의 통신을 위한 비동기 작업을 여기에 추가
-        // 예를 들어, async_read, async_write 등을 사용할 수 있음
     }
 
 private:
@@ -48,7 +66,7 @@ int main() {
         io_context ioContext;
         unsigned short port = 7777;
 
-        Server server(ioContext, port);
+        EchoServer server(ioContext, port);
 
         // 비동기 이벤트 처리 시작
         ioContext.run();
