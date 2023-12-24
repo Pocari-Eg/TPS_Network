@@ -5,7 +5,11 @@ using namespace boost::asio;
 
 class EchoSession : public std::enable_shared_from_this<EchoSession> {
 public:
-    EchoSession(ip::tcp::socket socket) : socket(std::move(socket)) {}
+    EchoSession(io_context& ioContext) : socket(ioContext) {}
+
+    ip::tcp::socket& getSocket() {
+        return socket;
+    }
 
     void start() {
         readData();
@@ -47,10 +51,12 @@ public:
 
 private:
     void startAccept() {
-        acceptor.async_accept(
-            [this](boost::system::error_code ec, ip::tcp::socket socket) {
+        auto session = std::make_shared<EchoSession>(ioContext);
+
+        acceptor.async_accept(session->getSocket(),
+            [this, session](boost::system::error_code ec) {
                 if (!ec) {
-                    std::make_shared<EchoSession>(std::move(socket))->start();
+                    session->start();
                 }
                 startAccept();  // 다음 연결 대기
             });
