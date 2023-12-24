@@ -3,84 +3,45 @@
 
 using namespace boost::asio;
 
-class EchoSession : public std::enable_shared_from_this<EchoSession> {
-public:
-    EchoSession(io_context& ioContext) : socket(ioContext) {}
-
-    ip::tcp::socket& getSocket() {
-        return socket;
-    }
-
-    void start() {
-        readData();
-    }
-
-private:
-    void readData() {
-        auto self(shared_from_this());
-        async_read_until(socket, buffer(data, max_length), '\n',
-            [this, self](boost::system::error_code ec, std::size_t length) {
-                if (!ec) {
-                    writeData(length);
-                }
-            });
-    }
-
-    void writeData(std::size_t length) {
-        auto self(shared_from_this());
-        async_write(socket, buffer(data, length),
-            [this, self](boost::system::error_code ec, std::size_t /* length */) {
-                if (!ec) {
-                    readData();  // 다음 데이터를 기다림
-                }
-            });
-    }
-
-private:
-    ip::tcp::socket socket;
-    enum { max_length = 1024 };
-    char data[max_length];
-};
-
-class EchoServer {
-public:
-    EchoServer(io_context& ioContext, unsigned short port)
-        : ioContext(ioContext), acceptor(ioContext, ip::tcp::endpoint(ip::tcp::v4(), port)) {
-        startAccept();
-    }
-
-private:
-    void startAccept() {
-        auto session = std::make_shared<EchoSession>(ioContext);
-
-        acceptor.async_accept(session->getSocket(),
-            [this, session](boost::system::error_code ec) {
-                if (!ec) {
-                    session->start();
-                }
-                startAccept();  // 다음 연결 대기
-            });
-    }
-
-private:
-    io_context& ioContext;
-    ip::tcp::acceptor acceptor;
-};
-
 int main() {
     try {
-        io_context ioContext;
-        unsigned short port = 7777;
+        io_service io_service;
 
-        EchoServer server(ioContext, port);
+        // 소켓 생성
+        ip::tcp::acceptor acceptor(io_service, ip::tcp::endpoint(ip::tcp::v4(), 7777));
 
-        // 비동기 이벤트 처리 시작
-        ioContext.run();
+        std::cout << "Echo Server started. Listening on port 7777..." << std::endl;
 
-        return 0;
+        for (;;) {
+            ip::tcp::socket socket(io_service);
+            acceptor.accept(socket);
+
+            std::cout << "Client connected." << std::endl;
+
+            try {
+                for (;;) {
+                    // 데이터를 받아서 다시 클라이언트에게 보냄
+                    std::array<char, 1024> data;
+                    size_t bytesRead = socket.read_some(buffer(data));
+
+                    if (bytesRead == 0) {
+                        // 클라이언트가 연결을 종료함
+                        std::cout << "Client disconnected." << std::endl;
+                        break;
+                    }
+
+                    socket.write_some(buffer(data, bytesRead));
+                }
+            }
+            catch (std::exception& e) {
+                // 에러 발생 시 처리
+                std::cerr << "Error: " << e.what() << std::endl;
+            }
+        }
     }
-    catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
-        return 1;
+    catch (std::exception& e) {
+        std::cerr << e.what() << std::endl;
     }
+
+    return 0;
 }
