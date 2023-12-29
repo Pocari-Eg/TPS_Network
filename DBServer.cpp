@@ -8,9 +8,9 @@ int main() {
         io_context io_context;
 
         // 소켓 생성
-        ip::tcp::acceptor acceptor(io_context, ip::tcp::endpoint(ip::tcp::v4(), 7777));
+        ip::tcp::acceptor acceptor(io_context, ip::tcp::endpoint(ip::tcp::v4(), 8888));
 
-        std::cout << "Echo Server started. Listening on port 7777..." << std::endl;
+        std::cout << "Echo Server started. Listening on port 8888..." << std::endl;
 
         for (;;) {
             ip::tcp::socket socket(io_context);
@@ -25,7 +25,6 @@ int main() {
 
             try {
                 for (;;) {
-                    // 데이터를 받아서 다시 클라이언트에게 보냄
                     std::array<char, 1024> data;
                     size_t bytesRead = socket.read_some(buffer(data));
 
@@ -36,10 +35,9 @@ int main() {
                     }
 
                     // 클라이언트가 보낸 메시지 출력
-                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << std::string(data.data(), bytesRead) << std::endl;
+                    std::cout << "RecvData " << clientIP << ":" << clientPort << ": " << std::string(data.data(), bytesRead) << std::endl;
 
-                    // 클라이언트에게 메시지 다시 전송
-                    socket.write_some(buffer(data, bytesRead));
+               
                 }
             }
             catch (std::exception& e) {
