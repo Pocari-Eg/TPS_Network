@@ -39,7 +39,7 @@ int main() {
 
                     
                     std::string signal = "Success";
-                    socket.write_some(buffer(signal, signal.size));
+                    socket.write_some(buffer(signal));
                 }
             }
             catch (std::exception& e) {
