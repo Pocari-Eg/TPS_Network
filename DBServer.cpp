@@ -25,6 +25,7 @@ int main() {
 
             try {
                 for (;;) {
+     // 데이터를 받아서 다시 클라이언트에게 보냄
                     std::array<char, 1024> data;
                     size_t bytesRead = socket.read_some(buffer(data));
 
@@ -35,14 +36,13 @@ int main() {
                     }
 
                     // 클라이언트가 보낸 메시지 출력
-                    std::cout << "RecvData " << clientIP << ":" << clientPort << ": " << std::string(data.data(), bytesRead) << std::endl;
+                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << std::string(data.data(), bytesRead) << std::endl;
 
-                    
-          
+
                     std::array<char, 1024> data;
-                    size_t bytessocket.read_some(buffer(data)); Read =
-                        // 클라이언트에게 메시지 다시 전송
-                        socket.write_some(buffer(data, bytesRead));
+                    size_t bytesRead = socket.read_some(buffer(data));
+                    // 클라이언트에게 메시지 다시 전송
+                    socket.write_some(buffer(data, bytesRead));
                 }
             }
             catch (std::exception& e) {
