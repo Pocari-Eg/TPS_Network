@@ -10,7 +10,7 @@ int main() {
         // 소켓 생성
         ip::tcp::acceptor acceptor(io_context, ip::tcp::endpoint(ip::tcp::v4(), 8888));
 
-        std::cout << "Echo Server started. Listening on port 8888..." << std::endl;
+        std::cout << "DB Server started. Listening on port 8888..." << std::endl;
 
         for (;;) {
             ip::tcp::socket socket(io_context);
@@ -37,7 +37,9 @@ int main() {
                     // 클라이언트가 보낸 메시지 출력
                     std::cout << "RecvData " << clientIP << ":" << clientPort << ": " << std::string(data.data(), bytesRead) << std::endl;
 
-               
+                    
+                    std::string signal = "Success";
+                    socket.write_some(buffer(signal, signal.size));
                 }
             }
             catch (std::exception& e) {
