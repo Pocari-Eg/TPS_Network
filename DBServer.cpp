@@ -38,10 +38,9 @@ int main() {
                     std::cout << "RecvData " << clientIP << ":" << clientPort << ": " << std::string(data.data(), bytesRead) << std::endl;
 
                     
-                    array<char, 100> signal;
-                    size_t signalBytes= socket.read_some(buffer(signal));
-
-                    socket.write_some(signal, signalBytes);
+          
+                    std::string signal = "Success";
+                    write(socket, signal);
                 }
             }
             catch (std::exception& e) {
