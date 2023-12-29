@@ -39,8 +39,10 @@ int main() {
 
                     
           
-                    std::string signal = "Success";
-                    write(socket, signal);
+                    std::array<char, 1024> data;
+                    size_t bytessocket.read_some(buffer(data)); Read =
+                        // 클라이언트에게 메시지 다시 전송
+                        socket.write_some(buffer(data, bytesRead));
                 }
             }
             catch (std::exception& e) {
