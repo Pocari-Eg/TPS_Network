@@ -38,8 +38,10 @@ int main() {
                     // 클라이언트가 보낸 메시지 출력
                     std::cout << "Message from " << clientIP << ":" << clientPort << ": " << std::string(data.data(), bytesRead) << std::endl;
 
+
+                    std::string signal = "Success";
                     // 클라이언트에게 메시지 다시 전송
-                    socket.write_some(buffer(data, bytesRead));
+                    socket.write_some(buffer(signal));
                 }
             }
             catch (std::exception& e) {
