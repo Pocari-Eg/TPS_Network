@@ -19,7 +19,7 @@ int main() {
             // Å¬¶óÀÌ¾ðÆ® Á¤º¸ È¹µæ
             ip::tcp::endpoint clientEndpoint = socket.remote_endpoint();
             std::string clientIP = clientEndpoint.address().to_string();
-            unsigned short clientPort = clientEndpoint.port();
+            unsigned short clientPort =7777;
 
             std::cout << "Client connected from " << clientIP << ":" << clientPort << std::endl;
 
