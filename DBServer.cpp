@@ -28,7 +28,7 @@ RegiStruct Regi_deserialize(const std::vector<char>& buffer) {
     memcpy(&result, buffer.data(), sizeof(result));
     return result;
 }
-
+boost::system::error_code error;
 
 int main() {
     try {
@@ -55,14 +55,13 @@ int main() {
                    // 데이터를 받아서 다시 클라이언트에게 보냄
                    
                     std::vector<char> receivedData(sizeof(RegiStruct));
-                    read(socket, buffer(receivedData), ignored_error);
+                    read(socket, buffer(receivedData), error);
                     RegiStruct receivedStruct = Regi_deserialize(receivedData);
 
 
                     // 클라이언트가 보낸 메시지 출력
-                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << receivedStruct.id << endl;
-                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << receivedStruct.pwd << endl;
-                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << receivedStruct.NickName << endl;
+                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << receivedStruct.id<<","
+                        << receivedStruct.pwd<<","<< receivedStruct.NickName << std::endl;
 
 
                     std::string signal = "Success";
