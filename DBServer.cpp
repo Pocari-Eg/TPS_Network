@@ -3,6 +3,33 @@
 
 using namespace boost::asio;
 
+struct LoginStruct
+{
+    std::string id;
+    std::string pwd;
+};
+
+struct RegiStruct
+{
+    std::string id;
+    std::string pwd;
+    std::string NickName;
+};
+
+LoginStruct Login_deserialize(const std::vector<char>& buffer) {
+    MyStruct result;
+    memcpy(&result, buffer.data(), sizeof(result));
+    return result;
+}
+
+
+RegiStruct Regi_deserialize(const std::vector<char>& buffer) {
+    MyStruct result;
+    memcpy(&result, buffer.data(), sizeof(result));
+    return result;
+}
+
+
 int main() {
     try {
         io_context io_context;
@@ -25,18 +52,16 @@ int main() {
 
             try {
                 for (;;) {
-     // 데이터를 받아서 다시 클라이언트에게 보냄
-                    std::array<char, 1024> data;
-                    size_t bytesRead = socket.read_some(buffer(data));
+                   // 데이터를 받아서 다시 클라이언트에게 보냄
+                   
+                    std::vector<char> receivedData(sizeof(RegiStruct));
+                    read(socket, buffer(receivedData), ignored_error);
+                    RegiStruct receivedStruct = Regi_deserialize(receivedData);
 
-                    if (bytesRead == 0) {
-                        // 클라이언트가 연결을 종료함
-                        std::cout << "Client disconnected: " << clientIP << ":" << clientPort << std::endl;
-                        break;
-                    }
 
                     // 클라이언트가 보낸 메시지 출력
-                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << std::string(data.data(), bytesRead) << std::endl;
+                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << receivedStruct.id<<","<< 
+                        receivedStruct.pwd<<","<< receivedStruct.NickName << std::endl;
 
 
                     std::string signal = "Success";
