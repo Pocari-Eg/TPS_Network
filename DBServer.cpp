@@ -60,8 +60,9 @@ int main() {
 
 
                     // 클라이언트가 보낸 메시지 출력
-                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << receivedStruct.id<<"  ,  "<< 
-                        receivedStruct.pwd<<"  ,  "<< receivedStruct.NickName << std::endl;
+                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << receivedStruct.id << endl;
+                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << receivedStruct.pwd << endl;
+                    std::cout << "Message from " << clientIP << ":" << clientPort << ": " << receivedStruct.NickName << endl;
 
 
                     std::string signal = "Success";
