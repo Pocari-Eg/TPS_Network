@@ -17,14 +17,14 @@ struct RegiStruct
 };
 
 LoginStruct Login_deserialize(const std::vector<char>& buffer) {
-    MyStruct result;
+    LoginStruct result;
     memcpy(&result, buffer.data(), sizeof(result));
     return result;
 }
 
 
 RegiStruct Regi_deserialize(const std::vector<char>& buffer) {
-    MyStruct result;
+    RegiStruct result;
     memcpy(&result, buffer.data(), sizeof(result));
     return result;
 }
