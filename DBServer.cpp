@@ -28,7 +28,6 @@ RegiStruct Regi_deserialize(const std::vector<char>& buffer) {
     memcpy(&result, buffer.data(), sizeof(result));
     return result;
 }
-boost::system::error_code error;
 
 int main() {
     try {
@@ -55,7 +54,7 @@ int main() {
                    // 데이터를 받아서 다시 클라이언트에게 보냄
                    
                     std::vector<char> receivedData(sizeof(RegiStruct));
-                    read(socket, buffer(receivedData), error);
+                    read(socket, buffer(receivedData));
                     RegiStruct receivedStruct = Regi_deserialize(receivedData);
 
 
