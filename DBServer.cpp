@@ -63,9 +63,9 @@ int main() {
                         << receivedStruct.pwd<<","<< receivedStruct.NickName << std::endl;
 
 
-                    std::string signal = "Success";
+                  //  std::string signal = "Success";
                     // 클라이언트에게 메시지 다시 전송
-                    socket.write_some(buffer(signal));
+                   // socket.write_some(buffer(signal));
                 }
             }
             catch (std::exception& e) {
