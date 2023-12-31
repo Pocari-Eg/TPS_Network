@@ -1,19 +1,17 @@
 #include <iostream>
 #include <boost/asio.hpp>
-
 using namespace boost::asio;
-
 struct LoginStruct
 {
-    std::string id;
-    std::string pwd;
+    std::array<char, 25> id;
+    std::array<char, 25> pwd;
 };
 
 struct RegiStruct
 {
-    std::string id;
-    std::string pwd;
-    std::string NickName;
+    std::array<char, 25> id;
+    std::array<char, 25> pwd;
+    std::array<char, 50> NickName;
 };
 
 LoginStruct Login_deserialize(const std::vector<char>& buffer) {
@@ -51,18 +49,18 @@ int main() {
 
             try {
                 for (;;) {
-                   // 데이터를 받아서 다시 클라이언트에게 보냄
-                   
+                    // 데이터를 받아서 다시 클라이언트에게 보냄
+
                     std::vector<char> receivedData(sizeof(RegiStruct));
                     read(socket, buffer(receivedData));
                     RegiStruct receivedStruct = Regi_deserialize(receivedData);
 
 
                     // 클라이언트가 보낸 메시지 출력
-                    std::cout << "message from " << clientip << ":" << clientport << ": " << receivedstruct.id<<","
-                        << receivedstruct.pwd<<","<< receivedstruct.nickname << std::endl;
+                    std::cout << "message from " << clientIP << ":" << clientPort << ": " << receivedStruct.id.data() << ","
+                        << receivedStruct.pwd.data() << "," << receivedStruct.NickName.data() << std::endl;
 
-                
+
                     std::string signal = "Success";
                     // 클라이언트에게 메시지 다시 전송
                     socket.write_some(buffer(signal));
