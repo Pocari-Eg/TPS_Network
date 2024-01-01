@@ -125,11 +125,11 @@ bool CheckAlreayJoin(std::array<char, 25> id)
 
 
     // 특정 id를 사용하여 데이터 조회
-    string query = "SELECT * FROM UserTable WHERE id = '";
+    std::string query = "SELECT * FROM UserTable WHERE id = '";
     query += string(id.data(), id.size()) + "'";
 
     if (mysql_query(conn, query.c_str())) {
-        cerr << "mysql_query() failed: " << mysql_error(conn) << endl;
+        std::cerr << "mysql_query() failed: " << mysql_error(conn) << std::endl;
         mysql_close(conn);
         return false;
     }
