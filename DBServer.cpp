@@ -168,11 +168,16 @@ bool JoinAccount(RegiStruct UserData)
     string m_id = "'" + string(UserData.id.data()) + "'";
     string m_pwd = "'" + string(UserData.pwd.data()) + "'";
     string m_NickName = "'" + string(UserData.NickName.data()) + "'";
-    // 특정 id를 사용하여 데이터 조회
+
+   
     string query = "INSERT INTO UserTable VALUES ( = ";
     query += m_id + "," + m_pwd + "," + m_NickName +")";
+
+
+
     if (mysql_query(&conn, query.c_str())) {
         cout << "Error Insert Data" << endl;
+        cerr << "mysql_query() failed: " << mysql_error(&conn) << endl;
         return false;
     }
 
