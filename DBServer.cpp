@@ -136,10 +136,10 @@ bool CheckAlreayJoin(array<char, 25> id)
         return false;
     }
 
-    res = mysql_store_result(&conn);
+    sql_result = mysql_store_result(&conn);
 
     // 결과 출력
-    if (res) {
+    if (sql_result) {
          cout << "Already Join ID" << endl;
         mysql_close(&conn);
         return false;
