@@ -1,5 +1,7 @@
 #include <iostream>
 #include <boost/asio.hpp>
+#include <mysql/mysql.h>
+
 using namespace boost::asio;
 struct LoginStruct
 {
@@ -14,6 +16,7 @@ struct RegiStruct
     std::array<char, 50> NickName;
 };
 
+#pragma region serialize
 LoginStruct Login_deserialize(const std::vector<char>& buffer) {
     LoginStruct result;
     memcpy(&result, buffer.data(), sizeof(result));
@@ -26,6 +29,16 @@ RegiStruct Regi_deserialize(const std::vector<char>& buffer) {
     memcpy(&result, buffer.data(), sizeof(result));
     return result;
 }
+#pragma endregion serialize
+
+bool CheckAlreayJoin(std::array<char, 25> id)
+{
+
+    
+
+    return false;
+}
+
 
 int main() {
     try {
@@ -60,6 +73,18 @@ int main() {
                     std::cout << "message from " << clientIP << ":" << clientPort << ": " << receivedStruct.id.data() << ","
                         << receivedStruct.pwd.data() << "," << receivedStruct.NickName.data() << std::endl;
 
+                    
+
+                    if(CheckAlreayJoin(receivedStruct.id))
+                    {
+
+                    }
+                    else
+                    {
+
+                    }
+
+                      
 
                     std::string signal = "Success";
                     // 클라이언트에게 메시지 다시 전송
