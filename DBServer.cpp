@@ -33,7 +33,8 @@ RegiStruct Regi_deserialize(const std::vector<char>& buffer) {
 
 bool CheckAlreayJoin(std::array<char, 25> id)
 {
-
+    
+    MYSQL *conn =NULL;
     
 
     return false;
