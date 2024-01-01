@@ -21,7 +21,7 @@ struct RegiStruct
 #define DB_USER "admin"
 #define DB_PWD "1eodnek1"
 #define DB_NAME "TPSUser"
-
+#define TB_NAME "UserTable"
 
 LoginStruct Login_deserialize(const std::vector<char>& buffer);
 RegiStruct Regi_deserialize(const std::vector<char>& buffer);
@@ -64,11 +64,9 @@ int main() {
 
                     
 
+                    //true이면 데이터가 없으므로 가입 할 수 있다.
+                    //false이면 연결이 안되거나 이미 가입정보가 있어 가입이 안된다.
                     if(CheckAlreayJoin(receivedStruct.id))
-                    {
-
-                    }
-                    else
                     {
 
                     }
@@ -123,15 +121,35 @@ bool CheckAlreayJoin(std::array<char, 25> id)
     {
         std::cout<<"mysql connect error : "<<mysql_error(&conn)<< std::endl;
         return false;
-        
     }
-    else{
-        std::cout<<"mysql connect Succese "<< std::endl;
+
+
+    // 특정 id를 사용하여 데이터 조회
+    string query = "SELECT * FROM UserTable WHERE id = '";
+    query += string(id.data(), id.size()) + "'";
+
+    if (mysql_query(conn, query.c_str())) {
+        cerr << "mysql_query() failed: " << mysql_error(conn) << endl;
+        mysql_close(conn);
         return false;
     }
 
-    
+    res = mysql_store_result(conn);
+
+    // 결과 출력
+    if (res) {
+         std:cout << "Already Join ID" << std::endl;
+        mysql_close(conn);
+        return false;
+    }
+
+
+
+    std:cout << "No Join ID" << std::endl;
+
+    // MySQL 연결 해제
+    mysql_close(conn);
     
 
-    return false;
+    return true;
 }
