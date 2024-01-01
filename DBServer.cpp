@@ -17,10 +17,15 @@ struct RegiStruct
 };
 
 
-#define DB_HOST "localhost"
+#define DB_HOST "127.0.0.1"
 #define DB_USER "admin"
 #define DB_PWD "1eodnek1"
 #define DB_NAME "TPSUser"
+
+
+LoginStruct Login_deserialize(const std::vector<char>& buffer);
+RegiStruct Regi_deserialize(const std::vector<char>& buffer);
+bool CheckAlreayJoin(std::array<char, 25> id);
 
 
 
@@ -105,7 +110,7 @@ RegiStruct Regi_deserialize(const std::vector<char>& buffer) {
 bool CheckAlreayJoin(std::array<char, 25> id)
 {
     
-    MYSQL *conn =NULL;
+    MYSQL* conn =NULL;
     MYSQL_RES* sql_result;
     MYSQL_ROW sql_row;
     int query_stat;
