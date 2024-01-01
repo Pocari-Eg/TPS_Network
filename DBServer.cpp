@@ -16,29 +16,12 @@ struct RegiStruct
     std::array<char, 50> NickName;
 };
 
-#pragma region serialize
-LoginStruct Login_deserialize(const std::vector<char>& buffer) {
-    LoginStruct result;
-    memcpy(&result, buffer.data(), sizeof(result));
-    return result;
-}
 
+#define DB_HOST "localhost"
+#define DB_USER "admin"
+#define DB_PWD "1eodnek1"
+#define DB_NAME "TPSUser"
 
-RegiStruct Regi_deserialize(const std::vector<char>& buffer) {
-    RegiStruct result;
-    memcpy(&result, buffer.data(), sizeof(result));
-    return result;
-}
-#pragma endregion serialize
-
-bool CheckAlreayJoin(std::array<char, 25> id)
-{
-    
-    MYSQL *conn =NULL;
-    
-
-    return false;
-}
 
 
 int main() {
@@ -103,4 +86,47 @@ int main() {
     }
 
     return 0;
+}
+#pragma region serialize
+LoginStruct Login_deserialize(const std::vector<char>& buffer) {
+    LoginStruct result;
+    memcpy(&result, buffer.data(), sizeof(result));
+    return result;
+}
+
+
+RegiStruct Regi_deserialize(const std::vector<char>& buffer) {
+    RegiStruct result;
+    memcpy(&result, buffer.data(), sizeof(result));
+    return result;
+}
+#pragma endregion serialize
+
+bool CheckAlreayJoin(std::array<char, 25> id)
+{
+    
+    MYSQL *conn =NULL;
+    MYSQL_RES* sql_result;
+    MYSQL_ROW sql_row;
+    int query_stat;
+
+   mysql_init(&conn);
+
+
+    connection=mysql_real_connect(&conn,DB_HOST,DB_USER,DB_PWD,DB_NAME,3306,(char*)NULL,0);
+    if(connection==NULL)
+    {
+        cout<<"mysql connect error : "<<mysql_error(&conn)<<endl;
+        return false;
+        
+    }
+    else{
+        cout<<"mysql connect Succese "<<endl;
+        return false;
+    }
+
+    
+    
+
+    return false;
 }
