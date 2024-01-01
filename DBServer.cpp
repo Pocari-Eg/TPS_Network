@@ -3,17 +3,19 @@
 #include "/usr/include/mysql/mysql.h"
 
 using namespace boost::asio;
+
+using namespace std;
 struct LoginStruct
 {
-    std::array<char, 25> id;
-    std::array<char, 25> pwd;
+    array<char, 25> id;
+    array<char, 25> pwd;
 };
 
 struct RegiStruct
 {
-    std::array<char, 25> id;
-    std::array<char, 25> pwd;
-    std::array<char, 50> NickName;
+    array<char, 25> id;
+    array<char, 25> pwd;
+    array<char, 50> NickName;
 };
 
 
@@ -23,9 +25,9 @@ struct RegiStruct
 #define DB_NAME "TPSUser"
 #define TB_NAME "UserTable"
 
-LoginStruct Login_deserialize(const std::vector<char>& buffer);
-RegiStruct Regi_deserialize(const std::vector<char>& buffer);
-bool CheckAlreayJoin(std::array<char, 25> id);
+LoginStruct Login_deserialize(const vector<char>& buffer);
+RegiStruct Regi_deserialize(const vector<char>& buffer);
+bool CheckAlreayJoin(array<char, 25> id);
 
 
 
@@ -36,7 +38,7 @@ int main() {
         // 소켓 생성
         ip::tcp::acceptor acceptor(io_context, ip::tcp::endpoint(ip::tcp::v4(), 8888));
 
-        std::cout << "DB Server started. Listening on port 8888..." << std::endl;
+        cout << "DB Server started. Listening on port 8888..." << endl;
 
         for (;;) {
             ip::tcp::socket socket(io_context);
@@ -44,23 +46,23 @@ int main() {
 
             // 클라이언트 정보 획득
             ip::tcp::endpoint clientEndpoint = socket.remote_endpoint();
-            std::string clientIP = clientEndpoint.address().to_string();
+            string clientIP = clientEndpoint.address().to_string();
             unsigned short clientPort = clientEndpoint.port();
 
-            std::cout << "Client connected from " << clientIP << ":" << clientPort << std::endl;
+            cout << "Client connected from " << clientIP << ":" << clientPort << endl;
 
             try {
                 for (;;) {
                     // 데이터를 받아서 다시 클라이언트에게 보냄
 
-                    std::vector<char> receivedData(sizeof(RegiStruct));
+                    vector<char> receivedData(sizeof(RegiStruct));
                     read(socket, buffer(receivedData));
                     RegiStruct receivedStruct = Regi_deserialize(receivedData);
 
 
                     // 클라이언트가 보낸 메시지 출력
-                    std::cout << "message from " << clientIP << ":" << clientPort << ": " << receivedStruct.id.data() << ","
-                        << receivedStruct.pwd.data() << "," << receivedStruct.NickName.data() << std::endl;
+                    cout << "message from " << clientIP << ":" << clientPort << ": " << receivedStruct.id.data() << ","
+                        << receivedStruct.pwd.data() << "," << receivedStruct.NickName.data() << endl;
 
                     
 
@@ -73,39 +75,39 @@ int main() {
 
                       
 
-                    std::string signal = "Success";
+                    string signal = "Success";
                     // 클라이언트에게 메시지 다시 전송
                     socket.write_some(buffer(signal));
                 }
             }
-            catch (std::exception& e) {
+            catch (exception& e) {
                 // 에러 발생 시 처리
-                std::cerr << "Error: " << e.what() << std::endl;
+                cerr << "Error: " << e.what() << endl;
             }
         }
     }
-    catch (std::exception& e) {
-        std::cerr << e.what() << std::endl;
+    catch (exception& e) {
+        cerr << e.what() << endl;
     }
 
     return 0;
 }
 #pragma region serialize
-LoginStruct Login_deserialize(const std::vector<char>& buffer) {
+LoginStruct Login_deserialize(const vector<char>& buffer) {
     LoginStruct result;
     memcpy(&result, buffer.data(), sizeof(result));
     return result;
 }
 
 
-RegiStruct Regi_deserialize(const std::vector<char>& buffer) {
+RegiStruct Regi_deserialize(const vector<char>& buffer) {
     RegiStruct result;
     memcpy(&result, buffer.data(), sizeof(result));
     return result;
 }
 #pragma endregion serialize
 
-bool CheckAlreayJoin(std::array<char, 25> id)
+bool CheckAlreayJoin(array<char, 25> id)
 {
     
     MYSQL* connection =NULL,conn;
@@ -119,17 +121,17 @@ bool CheckAlreayJoin(std::array<char, 25> id)
    connection =mysql_real_connect(&conn,DB_HOST,DB_USER,DB_PWD,DB_NAME,3306,(char*)NULL,0);
     if(connection==NULL)
     {
-        std::cout<<"mysql connect error : "<<mysql_error(&conn)<< std::endl;
+        cout<<"mysql connect error : "<<mysql_error(&conn)<< endl;
         return false;
     }
 
 
     // 특정 id를 사용하여 데이터 조회
-    std::string query = "SELECT * FROM UserTable WHERE id = '";
+    string query = "SELECT * FROM UserTable WHERE id = '";
     query += string(id.data(), id.size()) + "'";
 
     if (mysql_query(conn, query.c_str())) {
-        std::cerr << "mysql_query() failed: " << mysql_error(conn) << std::endl;
+        cerr << "mysql_query() failed: " << mysql_error(conn) << endl;
         mysql_close(conn);
         return false;
     }
@@ -138,14 +140,14 @@ bool CheckAlreayJoin(std::array<char, 25> id)
 
     // 결과 출력
     if (res) {
-         std:cout << "Already Join ID" << std::endl;
+         cout << "Already Join ID" << endl;
         mysql_close(conn);
         return false;
     }
 
 
 
-    std:cout << "No Join ID" << std::endl;
+    cout << "No Join ID" << endl;
 
     // MySQL 연결 해제
     mysql_close(conn);
