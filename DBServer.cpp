@@ -169,14 +169,14 @@ bool JoinAccount(RegiStruct UserData)
     string m_pwd = "'" + string(UserData.pwd.data()) + "'";
     string m_NickName = "'" + string(UserData.NickName.data()) + "'";
     // 특정 id를 사용하여 데이터 조회
-    string query = "INSERT INTO sandbox VALUES ( = ";
+    string query = "INSERT INTO UserTable VALUES ( = ";
     query += m_id + "," + m_pwd + "," + m_NickName +")";
-    if (!mysql_query(&conn, query.c_str())) {
+    if (mysql_query(&conn, query.c_str())) {
         cout << "Error Insert Data" << endl;
         return false;
     }
 
-    cout << "Join User) ID :  " << m_id;
+    cout << "Join User) ID :  " << m_id << endl;
     //// MySQL 연결 해제
     mysql_close(&conn);
     return true;
