@@ -76,6 +76,16 @@ int main() {
                             // 클라이언트에게 메시지 다시 전송
                             socket.write_some(buffer(signal));
                         }
+                        else {
+                            string signal = "Success";
+                            // 클라이언트에게 메시지 다시 전송
+                            socket.write_some(buffer(signal));
+                        }
+                    }
+                    else {
+                        string signal = "Success";
+                        // 클라이언트에게 메시지 다시 전송
+                        socket.write_some(buffer(signal));
                     }
                    
                 }
