@@ -28,7 +28,7 @@ struct RegiStruct
 LoginStruct Login_deserialize(const vector<char>& buffer);
 RegiStruct Regi_deserialize(const vector<char>& buffer);
 bool CheckAlreayJoin(array<char, 25> id);
-bool JoinAccount(array<char, 25> id, array<char, 25> pwd,array<char, 50> NickName);
+bool JoinAccount(RegiStruct UesrData);
 
 
 int main() {
@@ -70,17 +70,14 @@ int main() {
                     //false이면 연결이 안되거나 이미 가입정보가 있어 가입이 안된다.
                     if(CheckAlreayJoin(receivedStruct.id))
                     {
-                        if (!JoinAccount(receivedStruct.id, receivedStruct.pwd, receivedStruct.NickName))
+                        if (JoinAccount(receivedStruct))
                         {
-                            
+                            string signal = "Success";
+                            // 클라이언트에게 메시지 다시 전송
+                            socket.write_some(buffer(signal));
                         }
                     }
-
-                      
-
-                    string signal = "Success";
-                    // 클라이언트에게 메시지 다시 전송
-                    socket.write_some(buffer(signal));
+                   
                 }
             }
             catch (exception& e) {
@@ -149,7 +146,7 @@ bool CheckAlreayJoin(array<char, 25> id)
 
     return true;
 }
-bool JoinAccount(array<char, 25> id, array<char, 25> pwd, array<char, 50> NickName)
+bool JoinAccount(RegiStruct UserData)
 {
 
 
@@ -168,20 +165,16 @@ bool JoinAccount(array<char, 25> id, array<char, 25> pwd, array<char, 50> NickNa
         return false;
     }
 
-    string m_id = "'" + string(id.data()) + "'";
-    string m_pwd = "'" + string(id.data()) + "'";
-    string m_NickName = "'" + string(id.data()) + "'";
+    string m_id = "'" + string(UserData.id.data()) + "'";
+    string m_pwd = "'" + string(UserData.pwd.data()) + "'";
+    string m_NickName = "'" + string(UserData.NickName.data()) + "'";
     // 특정 id를 사용하여 데이터 조회
     string query = "INSERT INTO sandbox VALUES ( = ";
     query += m_id + "," + m_pwd + "," + m_NickName +")";
-
     if (!mysql_query(&conn, query.c_str())) {
         cout << "Error Insert Data" << endl;
         return false;
     }
-
-
-
 
     cout << "Join User) ID :  " << id.data();
     //// MySQL 연결 해제
