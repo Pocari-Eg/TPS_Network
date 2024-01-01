@@ -128,7 +128,7 @@ bool CheckAlreayJoin(array<char, 25> id)
 
     // 특정 id를 사용하여 데이터 조회
     string query = "SELECT * FROM UserTable WHERE id = '";
-    query += string(id.data(), id.size()) + "'";
+    query += string(id.data()) + "'";
 
 
     cout << query << endl;
