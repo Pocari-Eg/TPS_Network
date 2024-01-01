@@ -130,27 +130,31 @@ bool CheckAlreayJoin(array<char, 25> id)
     string query = "SELECT * FROM UserTable WHERE id = '";
     query += string(id.data(), id.size()) + "'";
 
-    if (mysql_query(&conn, query.c_str())) {
-        cerr << "mysql_query() failed: " << mysql_error(&conn) << endl;
-        mysql_close(&conn);
-        return false;
-    }
 
-    sql_result = mysql_store_result(&conn);
+    cout << query << endl;
+  //  string query = "SELECT * FROM UserTable WHERE id = '" + string(idToSearch.data(), idToSearch.size()) + "'";
 
-    // 결과 출력
-    if (sql_result) {
-         cout << "Already Join ID" << endl;
-        mysql_close(&conn);
-        return false;
-    }
+    //if (mysql_query(&conn, query.c_str())) {
+    //    cerr << "mysql_query() failed: " << mysql_error(&conn) << endl;
+    //    mysql_close(&conn);
+    //    return false;
+    //}
+
+    //sql_result = mysql_store_result(&conn);
+
+    //// 결과 출력
+    //if (sql_result) {
+    //     cout << "Already Join ID" << endl;
+    //    mysql_close(&conn);
+    //    return false;
+    //}
 
 
 
-    cout << "No Join ID" << endl;
+    //cout << "No Join ID" << endl;
 
-    // MySQL 연결 해제
-    mysql_close(&conn);
+    //// MySQL 연결 해제
+    //mysql_close(&conn);
     
 
     return true;
