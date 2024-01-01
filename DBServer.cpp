@@ -176,7 +176,7 @@ bool JoinAccount(RegiStruct UserData)
         return false;
     }
 
-    cout << "Join User) ID :  " << id.data();
+    cout << "Join User) ID :  " << m_id;
     //// MySQL 연결 해제
     mysql_close(&conn);
     return true;
