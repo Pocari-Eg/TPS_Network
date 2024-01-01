@@ -32,7 +32,6 @@ bool JoinAccount(JoinStruct UesrData);
 
 
 int main() {
-    try {
         io_context io_context;
 
         // 소켓 생성
@@ -80,7 +79,6 @@ int main() {
                     {
                         string signal = "Error";
                         socket.write_some(buffer(signal));
-                        return 0;
                     }
                     string signal = "Success";
                     // 클라이언트에게 메시지 다시 전송
@@ -92,10 +90,7 @@ int main() {
                 cerr << "Error: " << e.what() << endl;
             }
         }
-    }
-    catch (exception& e) {
-        cerr << e.what() << endl;
-    }
+
 
     return 0;
 }
@@ -136,7 +131,6 @@ bool CheckAlreayJoin(array<char, 25> id)
     // 특정 id를 사용하여 데이터 조회
     string query = "SELECT * FROM UserTable WHERE id = '";
     query += string(id.data()) + "'";
-
     if (mysql_query(&conn, query.c_str())) {
         cout << "Already join User" << endl;
         return false;
