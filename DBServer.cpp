@@ -27,7 +27,7 @@ struct JoinStruct
 
 LoginStruct Login_deserialize(const vector<char>& buffer);
 JoinStruct Join_deserialize(const vector<char>& buffer);
-bool CheckAlreayJoin(array<char, 25> id);
+bool CheckAlreayJoin(array<char, 100> id);
 bool JoinAccount(JoinStruct UesrData);
 
 
