@@ -13,9 +13,9 @@ struct LoginStruct
 
 struct JoinStruct
 {
-    array<char, 25> id;
-    array<char, 25> pwd;
-    array<char, 50> NickName;
+    array<char, 100> id;
+    array<char, 100> pwd;
+    array<char, 100> NickName;
 };
 
 
@@ -71,7 +71,6 @@ int main() {
                     {
                         string signal = "Error";
                         socket.write_some(buffer(signal));
-                        return 0;
                    
                     }
 
@@ -109,7 +108,7 @@ JoinStruct Join_deserialize(const vector<char>& buffer) {
 }
 #pragma endJoinon serialize
 
-bool CheckAlreayJoin(array<char, 25> id)
+bool CheckAlreayJoin(array<char, 100> id)
 {
     
     MYSQL* connection =NULL,conn;
