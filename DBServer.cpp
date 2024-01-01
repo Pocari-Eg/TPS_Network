@@ -28,7 +28,7 @@ struct RegiStruct
 LoginStruct Login_deserialize(const vector<char>& buffer);
 RegiStruct Regi_deserialize(const vector<char>& buffer);
 bool CheckAlreayJoin(array<char, 25> id);
-void JoinAccount(array<char, 25> id, array<char, 25> pwd,array<char, 50> NickName);
+bool JoinAccount(array<char, 25> id, array<char, 25> pwd,array<char, 50> NickName);
 
 
 int main() {
@@ -70,7 +70,10 @@ int main() {
                     //false이면 연결이 안되거나 이미 가입정보가 있어 가입이 안된다.
                     if(CheckAlreayJoin(receivedStruct.id))
                     {
-                        JoinAccount(receivedStruct.id, receivedStruct.pwd, receivedStruct.NickName);
+                        if (!JoinAccount(receivedStruct.id, receivedStruct.pwd, receivedStruct.NickName))
+                        {
+                            
+                        }
                     }
 
                       
