@@ -11,7 +11,7 @@ struct LoginStruct
     array<char, 25> pwd;
 };
 
-struct RegiStruct
+struct JoinStruct
 {
     array<char, 25> id;
     array<char, 25> pwd;
@@ -26,9 +26,9 @@ struct RegiStruct
 #define TB_NAME "UserTable"
 
 LoginStruct Login_deserialize(const vector<char>& buffer);
-RegiStruct Regi_deserialize(const vector<char>& buffer);
+JoinStruct Join_deserialize(const vector<char>& buffer);
 bool CheckAlreayJoin(array<char, 25> id);
-bool JoinAccount(RegiStruct UesrData);
+bool JoinAccount(JoinStruct UesrData);
 
 
 int main() {
@@ -55,9 +55,9 @@ int main() {
                 for (;;) {
                     // 데이터를 받아서 다시 클라이언트에게 보냄
 
-                    vector<char> receivedData(sizeof(RegiStruct));
+                    vector<char> receivedData(sizeof(JoinStruct));
                     read(socket, buffer(receivedData));
-                    RegiStruct receivedStruct = Regi_deserialize(receivedData);
+                    JoinStruct receivedStruct = Join_deserialize(receivedData);
 
 
                     // 클라이언트가 보낸 메시지 출력
@@ -68,26 +68,23 @@ int main() {
 
                     //true이면 데이터가 없으므로 가입 할 수 있다.
                     //false이면 연결이 안되거나 이미 가입정보가 있어 가입이 안된다.
-                    if(CheckAlreayJoin(receivedStruct.id))
+                    if(!CheckAlreayJoin(receivedStruct.id))
                     {
-                        if (JoinAccount(receivedStruct))
-                        {
-                            string signal = "Success";
-                            // 클라이언트에게 메시지 다시 전송
-                            socket.write_some(buffer(signal));
-                        }
-                        else {
-                            string signal = "Success";
-                            // 클라이언트에게 메시지 다시 전송
-                            socket.write_some(buffer(signal));
-                        }
-                    }
-                    else {
-                        string signal = "Success";
-                        // 클라이언트에게 메시지 다시 전송
+                        string signal = "Error";
                         socket.write_some(buffer(signal));
-                    }
+                        return 0;
                    
+                    }
+
+                    if (!JoinAccount(receivedStruct))
+                    {
+                        string signal = "Error";
+                        socket.write_some(buffer(signal));
+                        return 0;
+                    }
+                    string signal = "Success";
+                    // 클라이언트에게 메시지 다시 전송
+                    socket.write_some(buffer(signal));
                 }
             }
             catch (exception& e) {
@@ -102,7 +99,7 @@ int main() {
 
     return 0;
 }
-#pragma region serialize
+#pragma Joinon serialize
 LoginStruct Login_deserialize(const vector<char>& buffer) {
     LoginStruct result;
     memcpy(&result, buffer.data(), sizeof(result));
@@ -110,12 +107,12 @@ LoginStruct Login_deserialize(const vector<char>& buffer) {
 }
 
 
-RegiStruct Regi_deserialize(const vector<char>& buffer) {
-    RegiStruct result;
+JoinStruct Join_deserialize(const vector<char>& buffer) {
+    JoinStruct result;
     memcpy(&result, buffer.data(), sizeof(result));
     return result;
 }
-#pragma endregion serialize
+#pragma endJoinon serialize
 
 bool CheckAlreayJoin(array<char, 25> id)
 {
@@ -156,7 +153,7 @@ bool CheckAlreayJoin(array<char, 25> id)
 
     return true;
 }
-bool JoinAccount(RegiStruct UserData)
+bool JoinAccount(JoinStruct UserData)
 {
 
 
