@@ -180,7 +180,7 @@ bool JoinAccount(RegiStruct UserData)
     string m_NickName = "'" + string(UserData.NickName.data()) + "'";
 
    
-    string query = "INSERT INTO UserTable (id, pwd, NickName, level) VALUES (";
+    string query = "INSERT INTO UserTable (id, pwd, Nick, Lv) VALUES (";
     query += m_id + "," + m_pwd + "," + m_NickName + "," + "1"+")";
 
 
