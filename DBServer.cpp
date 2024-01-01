@@ -28,7 +28,7 @@ struct RegiStruct
 LoginStruct Login_deserialize(const vector<char>& buffer);
 RegiStruct Regi_deserialize(const vector<char>& buffer);
 bool CheckAlreayJoin(array<char, 25> id);
-
+void JoinAccount(array<char, 25> id, array<char, 25> pwd,array<char, 50> NickName);
 
 
 int main() {
@@ -70,7 +70,7 @@ int main() {
                     //false이면 연결이 안되거나 이미 가입정보가 있어 가입이 안된다.
                     if(CheckAlreayJoin(receivedStruct.id))
                     {
-
+                        JoinAccount(receivedStruct.id, receivedStruct.pwd, receivedStruct.NickName);
                     }
 
                       
@@ -130,32 +130,58 @@ bool CheckAlreayJoin(array<char, 25> id)
     string query = "SELECT * FROM UserTable WHERE id = '";
     query += string(id.data()) + "'";
 
+    if (mysql_query(&conn, query.c_str())) {
+        cout << "Already join User" << endl;
+        return false;
+    }
 
-    cout << query << endl;
-  //  string query = "SELECT * FROM UserTable WHERE id = '" + string(idToSearch.data(), idToSearch.size()) + "'";
-
-    //if (mysql_query(&conn, query.c_str())) {
-    //    cerr << "mysql_query() failed: " << mysql_error(&conn) << endl;
-    //    mysql_close(&conn);
-    //    return false;
-    //}
-
-    //sql_result = mysql_store_result(&conn);
-
-    //// 결과 출력
-    //if (sql_result) {
-    //     cout << "Already Join ID" << endl;
-    //    mysql_close(&conn);
-    //    return false;
-    //}
+  
 
 
-
-    //cout << "No Join ID" << endl;
+    cout << "No Join User" << endl;
 
     //// MySQL 연결 해제
-    //mysql_close(&conn);
+    mysql_close(&conn);
     
 
+    return true;
+}
+bool JoinAccount(array<char, 25> id, array<char, 25> pwd, array<char, 50> NickName)
+{
+
+
+    MYSQL* connection = NULL, conn;
+    MYSQL_RES* sql_result;
+    MYSQL_ROW sql_row;
+    int query_stat;
+
+    mysql_init(&conn);
+
+
+    connection = mysql_real_connect(&conn, DB_HOST, DB_USER, DB_PWD, DB_NAME, 3306, (char*)NULL, 0);
+    if (connection == NULL)
+    {
+        cout << "mysql connect error : " << mysql_error(&conn) << endl;
+        return false;
+    }
+
+    string m_id = "'" + string(id.data()) + "'";
+    string m_pwd = "'" + string(id.data()) + "'";
+    string m_NickName = "'" + string(id.data()) + "'";
+    // 특정 id를 사용하여 데이터 조회
+    string query = "INSERT INTO sandbox VALUES ( = ";
+    query += m_id + "," + m_pwd + "," + m_NickName +")";
+
+    if (!mysql_query(&conn, query.c_str())) {
+        cout << "Error Insert Data" << endl;
+        return false;
+    }
+
+
+
+
+    cout << "Join User) ID :  " << id.data();
+    //// MySQL 연결 해제
+    mysql_close(&conn);
     return true;
 }
