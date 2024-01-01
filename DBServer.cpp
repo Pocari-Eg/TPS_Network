@@ -110,7 +110,7 @@ RegiStruct Regi_deserialize(const std::vector<char>& buffer) {
 bool CheckAlreayJoin(std::array<char, 25> id)
 {
     
-    MYSQL* conn =NULL;
+    MYSQL* connection =NULL,conn;
     MYSQL_RES* sql_result;
     MYSQL_ROW sql_row;
     int query_stat;
@@ -118,15 +118,15 @@ bool CheckAlreayJoin(std::array<char, 25> id)
    mysql_init(&conn);
 
 
-    connection=mysql_real_connect(&conn,DB_HOST,DB_USER,DB_PWD,DB_NAME,3306,(char*)NULL,0);
+   connection =mysql_real_connect(&conn,DB_HOST,DB_USER,DB_PWD,DB_NAME,3306,(char*)NULL,0);
     if(connection==NULL)
     {
-        cout<<"mysql connect error : "<<mysql_error(&conn)<<endl;
+        std::cout<<"mysql connect error : "<<mysql_error(&conn)<< std::endl;
         return false;
         
     }
     else{
-        cout<<"mysql connect Succese "<<endl;
+        std::cout<<"mysql connect Succese "<< std::endl;
         return false;
     }
 
