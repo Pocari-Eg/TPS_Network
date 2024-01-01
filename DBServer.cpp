@@ -1,6 +1,6 @@
 #include <iostream>
 #include <boost/asio.hpp>
-#include <mysql/mysql.h>
+#include "/usr/include/mysql/mysql.h"
 
 using namespace boost::asio;
 struct LoginStruct
