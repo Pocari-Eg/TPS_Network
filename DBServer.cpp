@@ -34,7 +34,8 @@ bool JoinAccount(JoinStruct UesrData);
 int idSize = 0;
 int pwdSize = 0;
 int nickNameSize = 0;
-int main() {
+int main() 
+{
         io_context io_context;
 
         // 소켓 생성
@@ -68,7 +69,7 @@ int main() {
 
                     std::string id_str(receivedStruct.id.data(), receivedStruct.id.data() + idSize);
                     std::string pwd_str(receivedStruct.pwd.data(), receivedStruct.pwd.data() + pwdSize);
-                    std::string NickName_str(receivedStruct.NickName.data(), receivedStruct.NickName.data() + nickNameSize;
+                    std::string NickName_str(receivedStruct.NickName.data(), receivedStruct.NickName.data() + nickNameSize);
 
                         // 클라이언트가 보낸 메시지 출력
                    cout << "message from " << clientIP << ":" << clientPort << ": " << id_str << ", " << pwd_str << ", " << NickName_str << endl;
