@@ -5,13 +5,9 @@
 using namespace boost::asio;
 
 using namespace std;
-struct LoginStruct
-{
-    array<char, 25> id;
-    array<char, 25> pwd;
-};
 
-struct JoinStruct
+
+struct LoginStruct
 {
     array<char, 25> id;
     array<char, 25> pwd;
@@ -25,10 +21,9 @@ struct JoinStruct
 #define DB_NAME "TPSUser"
 #define TB_NAME "UserTable"
 
-LoginStruct Login_deserialize(const vector<char>& buffer);
-JoinStruct Join_deserialize(const vector<char>& buffer);
+LoginStruct deserialize(const vector<char>& buffer);
 bool CheckAlreayJoin(array<char, 25> id);
-bool JoinAccount(JoinStruct UesrData);
+bool JoinAccount(LoginStruct UesrData);
 
 
 int idSize = 0;
@@ -61,15 +56,8 @@ int main()
   
                     vector<char> receivedData(sizeof(LoginStruct));
                     read(socket, buffer(receivedData));
-                    if (buffer == NULL) {
 
-                        cout << "dasffasdsafsda" << endl;
-                        cerr << "Error: " << e.what() << endl;
-                        string signal = "Error";
-                        socket.write_some(buffer(signal));
-                    }
-
-                    JoinStruct receivedStruct = Join_deserialize(receivedData);
+                    LoginStruct receivedStruct = deserialize(receivedData);
 
 
 
@@ -80,25 +68,30 @@ int main()
                         // 클라이언트가 보낸 메시지 출력
                    cout << "message from " << clientIP << ":" << clientPort << ": " << id_str << ", " << pwd_str << ", " << NickName_str << endl;
 
-                    
+                   if (NickName_str != "LOGIN") {
 
-                    //true이면 데이터가 없으므로 가입 할 수 있다.
-                    //false이면 연결이 안되거나 이미 가입정보가 있어 가입이 안된다.
-                    if(!CheckAlreayJoin(receivedStruct.id))
-                    {
-                        string signal = "AlreayJoin";
-                        socket.write_some(buffer(signal));
-                   
-                    }
+                       //true이면 데이터가 없으므로 가입 할 수 있다.
+                       //false이면 연결이 안되거나 이미 가입정보가 있어 가입이 안된다.
+                       if (!CheckAlreayJoin(receivedStruct.id))
+                       {
+                           string signal = "AlreayJoin";
+                           socket.write_some(buffer(signal));
 
-                    if (!JoinAccount(receivedStruct))
-                    {
-                        string signal = "JoinError";
-                        socket.write_some(buffer(signal));
-                    }
-                    string signal = "Success";
-                    // 클라이언트에게 메시지 다시 전송
-                    socket.write_some(buffer(signal));
+                       }
+
+                       if (!JoinAccount(receivedStruct))
+                       {
+                           string signal = "JoinError";
+                           socket.write_some(buffer(signal));
+                       }
+                       string signal = "Success";
+                       // 클라이언트에게 메시지 다시 전송
+                       socket.write_some(buffer(signal));
+                   }
+                   else {
+
+                       cout << "Login" << endl;
+                   }
                 }
             }
             catch (exception& e) {
@@ -113,33 +106,9 @@ int main()
     return 0;
 }
 #pragma region serialize
-LoginStruct Login_deserialize(const vector<char>& buffer) {
+
+LoginStruct deserialize(const vector<char>& buffer) {
     LoginStruct result;
-    idSize = 0;
-    pwdSize = 0;
-
-
-    for (auto iter = buffer.begin(); iter != buffer.begin() + result.id.size(); iter++) {
-        if (*iter == '\0')break;
-        idSize++;
-    }
-
-    memcpy(result.id.data(), buffer.data(), idSize);
-
-    // Read pwd
-    size_t pwdOffset = result.id.size();
-    for (auto iter = buffer.begin() + pwdOffset; iter != buffer.begin() + pwdOffset + result.pwd.size(); iter++) {
-        if (*iter == '\0')break;
-        pwdSize++;
-    }
-
-    memcpy(result.pwd.data(), buffer.data() + pwdOffset, pwdSize);
-
-    return result;
-}
-
-JoinStruct Join_deserialize(const vector<char>& buffer) {
-    JoinStruct result;
 
     idSize = 0;
     pwdSize = 0;
@@ -216,7 +185,7 @@ bool CheckAlreayJoin(array<char, 25> id)
 
     return true;
 }
-bool JoinAccount(JoinStruct UserData)
+bool JoinAccount(LoginStruct UserData)
 {
 
 
