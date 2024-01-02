@@ -13,9 +13,9 @@ struct LoginStruct
 
 struct JoinStruct
 {
-    array<char, 100> id;
-    array<char, 100> pwd;
-    array<char, 100> NickName;
+    array<char, 25> id;
+    array<char, 25> pwd;
+    array<char, 25> NickName;
 };
 
 
@@ -27,10 +27,13 @@ struct JoinStruct
 
 LoginStruct Login_deserialize(const vector<char>& buffer);
 JoinStruct Join_deserialize(const vector<char>& buffer);
-bool CheckAlreayJoin(array<char, 100> id);
+bool CheckAlreayJoin(array<char, 25> id);
 bool JoinAccount(JoinStruct UesrData);
 
 
+int idSize = 0;
+int pwdSize = 0;
+int nickNameSize = 0;
 int main() {
         io_context io_context;
 
@@ -54,14 +57,21 @@ int main() {
                 for (;;) {
                     // 데이터를 받아서 다시 클라이언트에게 보냄
 
+                    idSize = 0;
+                    pwdSize = 0;
+                    nickNameSize = 0;
                     vector<char> receivedData(sizeof(JoinStruct));
                     read(socket, buffer(receivedData));
                     JoinStruct receivedStruct = Join_deserialize(receivedData);
 
 
-                    // 클라이언트가 보낸 메시지 출력
-                    cout << "message from " << clientIP << ":" << clientPort << ": " << receivedStruct.id.data() << ","
-                        << receivedStruct.pwd.data() << "," << receivedStruct.NickName.data() << endl;
+
+                    std::string id_str(receivedStruct.id.data(), receivedStruct.id.data() + idSize);
+                    std::string pwd_str(receivedStruct.pwd.data(), receivedStruct.pwd.data() + pwdSize);
+                    std::string NickName_str(receivedStruct.NickName.data(), receivedStruct.NickName.data() + nickNameSize;
+
+                        // 클라이언트가 보낸 메시지 출력
+                   cout << "message from " << clientIP << ":" << clientPort << ": " << id_str << ", " << pwd_str << ", " << NickName_str << endl;
 
                     
 
@@ -93,22 +103,67 @@ int main() {
 
     return 0;
 }
-#pragma Joinon serialize
+#pragma region serialize
 LoginStruct Login_deserialize(const vector<char>& buffer) {
     LoginStruct result;
-    memcpy(&result, buffer.data(), sizeof(result));
+
+
+    for (auto iter = buffer.begin(); iter != buffer.begin() + result.id.size(); iter++) {
+        if (*iter == NULL)break;
+        idSize++;
+    }
+
+    memcpy(result.id.data(), buffer.data(), idSize);
+
+    // Read pwd
+    size_t pwdOffset = result.id.size();
+    for (auto iter = buffer.begin() + pwdOffset; iter != buffer.begin() + pwdOffset + result.pwd.size(); iter++) {
+        if (*iter == NULL)break;
+        pwdSize++;
+    }
+
+    memcpy(result.pwd.data(), buffer.data() + pwdOffset, pwdSize);
+
     return result;
 }
-
 
 JoinStruct Join_deserialize(const vector<char>& buffer) {
     JoinStruct result;
-    memcpy(&result, buffer.data(), sizeof(result));
+
+
+
+    for (auto iter = buffer.begin(); iter != buffer.begin() + result.id.size(); iter++) {
+        if (*iter == NULL)break;
+        idSize++;
+    }
+
+    memcpy(result.id.data(), buffer.data(), idSize);
+
+    // Read pwd
+    size_t pwdOffset = result.id.size();
+    for (auto iter = buffer.begin() + pwdOffset; iter != buffer.begin() + pwdOffset + result.pwd.size(); iter++) {
+        if (*iter == NULL)break;
+        pwdSize++;
+    }
+
+    memcpy(result.pwd.data(), buffer.data() + pwdOffset, pwdSize);
+
+    // Read NickName
+    size_t nickNameOffset = pwdOffset + result.pwd.size();
+    for (auto iter = buffer.begin() + nickNameOffset; iter != buffer.begin() + nickNameOffset + result.NickName.size(); iter++) {
+        if (*iter == NULL)break;
+
+        nickNameSize++;
+    }
+
+    memcpy(result.NickName.data(), buffer.data() + nickNameOffset, nickNameSize);
+
     return result;
 }
-#pragma endJoinon serialize
+#pragma endregion serialize
 
-bool CheckAlreayJoin(array<char, 100> id)
+
+bool CheckAlreayJoin(array<char, 25> id)
 {
     
     MYSQL* connection =NULL,conn;
@@ -129,7 +184,9 @@ bool CheckAlreayJoin(array<char, 100> id)
 
     // 특정 id를 사용하여 데이터 조회
     string query = "SELECT * FROM UserTable WHERE id = '";
-    query += string(id.data()) + "'";
+
+    std::string id_str(receivedStruct.id.data(), receivedStruct.id.data() + idSize);
+    query += id_str + "'";
     if (mysql_query(&conn, query.c_str())) {
         cout << "Already join User" << endl;
         return false;
@@ -146,6 +203,7 @@ bool CheckAlreayJoin(array<char, 100> id)
 
     return true;
 }
+#pragma endJoinon serialize
 bool JoinAccount(JoinStruct UserData)
 {
 
@@ -164,10 +222,14 @@ bool JoinAccount(JoinStruct UserData)
         cout << "mysql connect error : " << mysql_error(&conn) << endl;
         return false;
     }
+    std::string id_str(receivedStruct.id.data(), receivedStruct.id.data() + idSize);
+    std::string pwd_str(receivedStruct.pwd.data(), receivedStruct.pwd.data() + pwdSize);
+    std::string NickName_str(receivedStruct.NickName.data(), receivedStruct.NickName.data() + nickNameSize;
 
-    string m_id = "'" + string(UserData.id.data()) + "'";
-    string m_pwd = "'" + string(UserData.pwd.data()) + "'";
-    string m_NickName = "'" + string(UserData.NickName.data()) + "'";
+
+    string m_id = "'" + id_str + "'";
+    string m_pwd = "'" + pwd_str + "'";
+    string m_NickName = "'" + NickName_str + "'";
 
    
     string query = "INSERT INTO UserTable (id, pwd, Nick, Lv) VALUES (";
