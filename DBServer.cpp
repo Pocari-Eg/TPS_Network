@@ -22,9 +22,10 @@ struct LoginStruct
 #define TB_NAME "UserTable"
 
 LoginStruct deserialize(const vector<char>& buffer);
-bool CheckAlreayJoin(array<char, 25> id);
+bool CheckAlreayJoin(LoginStruct UserData);
 bool JoinAccount(LoginStruct UesrData);
 
+string Login_Join(LoginStruct UesrData, std::string NickName);
 
 int idSize = 0;
 int pwdSize = 0;
@@ -68,30 +69,9 @@ int main()
                         // 클라이언트가 보낸 메시지 출력
                    cout << "message from " << clientIP << ":" << clientPort << ": " << id_str << ", " << pwd_str << ", " << NickName_str << endl;
 
-                   if (NickName_str != "LOGIN") {
+                   std::string signal=Login_Join(receivedStruct, NickName_str);
 
-                       //true이면 데이터가 없으므로 가입 할 수 있다.
-                       //false이면 연결이 안되거나 이미 가입정보가 있어 가입이 안된다.
-                       if (!CheckAlreayJoin(receivedStruct.id))
-                       {
-                           string signal = "AlreayJoin";
-                           socket.write_some(buffer(signal));
-
-                       }
-
-                       if (!JoinAccount(receivedStruct))
-                       {
-                           string signal = "JoinError";
-                           socket.write_some(buffer(signal));
-                       }
-                       string signal = "Success";
-                       // 클라이언트에게 메시지 다시 전송
-                       socket.write_some(buffer(signal));
-                   }
-                   else {
-
-                       cout << "Login" << endl;
-                   }
+                   socket.write_some(buffer(signal));
                 }
             }
             catch (exception& e) {
@@ -145,7 +125,7 @@ LoginStruct deserialize(const vector<char>& buffer) {
 #pragma endregion serialize
 
 
-bool CheckAlreayJoin(array<char, 25> id)
+bool CheckAlreayJoin(LoginStruct UserData)
 {
     
     MYSQL* connection =NULL,conn;
@@ -167,7 +147,7 @@ bool CheckAlreayJoin(array<char, 25> id)
     // 특정 id를 사용하여 데이터 조회
     string query = "SELECT * FROM UserTable WHERE id = '";
 
-    std::string id_str(id.data(), id.data() + idSize);
+    std::string id_str(UserData.id.data(), UserData.id.data() + idSize);
     query += id_str + "'";
     if (mysql_query(&conn, query.c_str())) {
         cout << "Already join User" << endl;
@@ -228,4 +208,29 @@ bool JoinAccount(LoginStruct UserData)
     //// MySQL 연결 해제
     mysql_close(&conn);
     return true;
+}
+string Login_Join(LoginStruct UesrData, std::string NickName)
+{
+    //가입 할 때
+    if (NickName != "LOGIN") {
+
+        //true이면 데이터가 없으므로 가입 할 수 있다.
+        //false이면 연결이 안되거나 이미 가입정보가 있어 가입이 안된다.
+        if (!CheckAlreayJoin(UesrData))
+        {
+            return "AlreayJoin";
+        }
+
+        if (!JoinAccount(UesrData))
+        {
+            return "JoinError";
+        }
+        return "Success";
+
+    }
+    //로그인 시
+    else {
+        cout << "Login" << endl;
+       return "Success";
+    }
 }
