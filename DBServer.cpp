@@ -59,8 +59,16 @@ int main()
                     // 데이터를 받아서 다시 클라이언트에게 보냄
 
   
-                    vector<char> receivedData(sizeof(JoinStruct));
+                    vector<char> receivedData(sizeof(LoginStruct));
                     read(socket, buffer(receivedData));
+                    if (buffer == NULL) {
+
+                        cout << "dasffasdsafsda" << endl;
+                        cerr << "Error: " << e.what() << endl;
+                        string signal = "Error";
+                        socket.write_some(buffer(signal));
+                    }
+
                     JoinStruct receivedStruct = Join_deserialize(receivedData);
 
 
@@ -78,14 +86,14 @@ int main()
                     //false이면 연결이 안되거나 이미 가입정보가 있어 가입이 안된다.
                     if(!CheckAlreayJoin(receivedStruct.id))
                     {
-                        string signal = "Error";
+                        string signal = "AlreayJoin";
                         socket.write_some(buffer(signal));
                    
                     }
 
                     if (!JoinAccount(receivedStruct))
                     {
-                        string signal = "Error";
+                        string signal = "JoinError";
                         socket.write_some(buffer(signal));
                     }
                     string signal = "Success";
@@ -96,6 +104,8 @@ int main()
             catch (exception& e) {
                 // 에러 발생 시 처리
                 cerr << "Error: " << e.what() << endl;
+                string signal = "Error";
+                socket.write_some(buffer(signal));
             }
         }
 
