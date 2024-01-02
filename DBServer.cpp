@@ -58,9 +58,7 @@ int main()
                 for (;;) {
                     // 데이터를 받아서 다시 클라이언트에게 보냄
 
-                    idSize = 0;
-                    pwdSize = 0;
-                    nickNameSize = 0;
+  
                     vector<char> receivedData(sizeof(JoinStruct));
                     read(socket, buffer(receivedData));
                     JoinStruct receivedStruct = Join_deserialize(receivedData);
@@ -107,10 +105,12 @@ int main()
 #pragma region serialize
 LoginStruct Login_deserialize(const vector<char>& buffer) {
     LoginStruct result;
+    idSize = 0;
+    pwdSize = 0;
 
 
     for (auto iter = buffer.begin(); iter != buffer.begin() + result.id.size(); iter++) {
-        if (*iter == NULL)break;
+        if (*iter == '\0')break;
         idSize++;
     }
 
@@ -119,7 +119,7 @@ LoginStruct Login_deserialize(const vector<char>& buffer) {
     // Read pwd
     size_t pwdOffset = result.id.size();
     for (auto iter = buffer.begin() + pwdOffset; iter != buffer.begin() + pwdOffset + result.pwd.size(); iter++) {
-        if (*iter == NULL)break;
+        if (*iter == '\0')break;
         pwdSize++;
     }
 
@@ -131,10 +131,12 @@ LoginStruct Login_deserialize(const vector<char>& buffer) {
 JoinStruct Join_deserialize(const vector<char>& buffer) {
     JoinStruct result;
 
-
+    idSize = 0;
+    pwdSize = 0;
+    nickNameSize = 0;
 
     for (auto iter = buffer.begin(); iter != buffer.begin() + result.id.size(); iter++) {
-        if (*iter == NULL)break;
+        if (*iter == '\0')break;
         idSize++;
     }
 
@@ -143,7 +145,7 @@ JoinStruct Join_deserialize(const vector<char>& buffer) {
     // Read pwd
     size_t pwdOffset = result.id.size();
     for (auto iter = buffer.begin() + pwdOffset; iter != buffer.begin() + pwdOffset + result.pwd.size(); iter++) {
-        if (*iter == NULL)break;
+        if (*iter == '\0')break;
         pwdSize++;
     }
 
@@ -152,7 +154,7 @@ JoinStruct Join_deserialize(const vector<char>& buffer) {
     // Read NickName
     size_t nickNameOffset = pwdOffset + result.pwd.size();
     for (auto iter = buffer.begin() + nickNameOffset; iter != buffer.begin() + nickNameOffset + result.NickName.size(); iter++) {
-        if (*iter == NULL)break;
+        if (*iter == '\0')break;
 
         nickNameSize++;
     }
