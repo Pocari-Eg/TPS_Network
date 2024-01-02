@@ -65,9 +65,9 @@ int main()
 
 
 
-                    std::string id_str(receivedStruct.id.data(), receivedStruct.id.data() + idSize);
-                    std::string pwd_str(receivedStruct.pwd.data(), receivedStruct.pwd.data() + pwdSize);
-                    std::string NickName_str(receivedStruct.NickName.data(), receivedStruct.NickName.data() + nickNameSize);
+                    std::string id_str(receivedStruct.id.begin(), receivedStruct.id.begin() + idSize);
+                    std::string pwd_str(receivedStruct.pwd.begin(), receivedStruct.pwd.begin() + pwdSize);
+                    std::string NickName_str(receivedStruct.NickName.begin(), receivedStruct.NickName.begin() + nickNameSize);
 
                         // 클라이언트가 보낸 메시지 출력
                    cout << "message from " << clientIP << ":" << clientPort << ": " << id_str << ", " << pwd_str << ", " << NickName_str << endl;
@@ -188,7 +188,7 @@ bool CheckAlreayJoin(array<char, 25> id)
     // 특정 id를 사용하여 데이터 조회
     string query = "SELECT * FROM UserTable WHERE id = '";
 
-    std::string id_str(receivedStruct.id.data(), receivedStruct.id.data() + idSize);
+    std::string id_str(id.data(), id.data() + idSize);
     query += id_str + "'";
     if (mysql_query(&conn, query.c_str())) {
         cout << "Already join User" << endl;
@@ -225,9 +225,9 @@ bool JoinAccount(JoinStruct UserData)
         cout << "mysql connect error : " << mysql_error(&conn) << endl;
         return false;
     }
-    std::string id_str(receivedStruct.id.data(), receivedStruct.id.data() + idSize);
-    std::string pwd_str(receivedStruct.pwd.data(), receivedStruct.pwd.data() + pwdSize);
-    std::string NickName_str(receivedStruct.NickName.data(), receivedStruct.NickName.data() + nickNameSize;
+    std::string id_str(UserData.id.data(), UserData.id.data() + idSize);
+    std::string pwd_str(UserData.pwd.data(), UserData.pwd.data() + pwdSize);
+    std::string NickName_str(UserData.NickName.data(), UserData.NickName.data() + nickNameSize;
 
 
     string m_id = "'" + id_str + "'";
