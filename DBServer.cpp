@@ -206,7 +206,6 @@ bool CheckAlreayJoin(array<char, 25> id)
 
     return true;
 }
-#pragma endJoinon serialize
 bool JoinAccount(JoinStruct UserData)
 {
 
@@ -227,7 +226,7 @@ bool JoinAccount(JoinStruct UserData)
     }
     std::string id_str(UserData.id.data(), UserData.id.data() + idSize);
     std::string pwd_str(UserData.pwd.data(), UserData.pwd.data() + pwdSize);
-    std::string NickName_str(UserData.NickName.data(), UserData.NickName.data() + nickNameSize;
+    std::string NickName_str(UserData.NickName.data(), UserData.NickName.data() + nickNameSize);
 
 
     string m_id = "'" + id_str + "'";
