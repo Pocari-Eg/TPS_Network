@@ -25,6 +25,7 @@ LoginStruct deserialize(const vector<char>& buffer);
 bool CheckAlreayJoinID(LoginStruct UserData);
 bool CheckAlreayJoinName(LoginStruct UserData);
 bool JoinAccount(LoginStruct UesrData);
+bool CheckRightPassword(LoginStruct UserData);
 
 string Login_Join(LoginStruct UesrData, std::string NickName);
 
@@ -263,6 +264,59 @@ bool JoinAccount(LoginStruct UserData)
     mysql_close(&conn);
     return true;
 }
+bool CheckPassword(LoginStruct UserData)
+{
+    MYSQL* connection = NULL, conn;
+    MYSQL_RES* sql_result;
+    MYSQL_ROW sql_row;
+    int query_stat;
+
+    mysql_init(&conn);
+
+
+    connection = mysql_real_connect(&conn, DB_HOST, DB_USER, DB_PWD, DB_NAME, 3306, (char*)NULL, 0);
+    if (connection == NULL)
+    {
+        cout << "mysql connect error : " << mysql_error(&conn) << endl;
+        return false;
+    }
+
+
+    // 특정 id를 사용하여 데이터 조회
+    string query = "SELECT * FROM UserTable WHERE id = '";
+
+    std::string id_str(UserData.id.data(), UserData.id.data() + idSize);
+    query += id_str + "'";
+
+    if (mysql_query(&conn, query.c_str())) {
+        cout << "Error in the query execution" << endl;
+        return false;
+    }
+
+
+    MYSQL_RES* result = mysql_store_result(conn);
+    if (!result) {
+        std::cout << "Error storing the result from the query" << std::endl;
+        return false;
+    }
+
+    int num_fields = mysql_num_fields(result);
+    MYSQL_ROW row;
+
+    while ((row = mysql_fetch_row(result))) {
+        for (int i = 0; i < num_fields; i++) {
+            // Access the data fields in the row
+            std::cout << "Column " << i << ": " << row[i] << std::endl;
+            // You can assign the values to the UserData struct or process them as needed
+        }
+    }
+
+    //// MySQL 연결 해제
+    mysql_close(&conn);
+
+
+    return true;
+}
 string Login_Join(LoginStruct UesrData, std::string NickName)
 {
     //가입 할 때
@@ -288,7 +342,16 @@ string Login_Join(LoginStruct UesrData, std::string NickName)
     }
     //로그인 시
     else {
-        cout << "Login" << endl;
+        if (CheckAlreayJoinID(UesrData))
+        {
+            return "NoJoin";
+        }
+        if (!CheckRightPassword(UesrData))
+        {
+            return "PasswordError";
+        }
+
+
        return "Success";
     }
 }
