@@ -142,6 +142,7 @@ bool CheckAlreayJoinID(LoginStruct UserData)
     if(connection==NULL)
     {
         cout<<"mysql connect error : "<<mysql_error(&conn)<< endl;
+        mysql_close(&conn);
         return false;
     }
 
@@ -154,6 +155,7 @@ bool CheckAlreayJoinID(LoginStruct UserData)
 
     if (mysql_query(&conn, query.c_str())) {
         cout << "Error in the query execution" << endl;
+        mysql_close(&conn);
         return false;
     }
 
@@ -162,7 +164,7 @@ bool CheckAlreayJoinID(LoginStruct UserData)
     MYSQL_RES* result = mysql_store_result(&conn);
     if (result && mysql_num_rows(result) > 0) {
         cout << "User with ID '" << id_str << "' already exists" << endl;
-        
+        mysql_close(&conn);
         return false;
     }
 
@@ -189,6 +191,7 @@ bool CheckAlreayJoinName(LoginStruct UserData)
     if (connection == NULL)
     {
         cout << "mysql connect error : " << mysql_error(&conn) << endl;
+        mysql_close(&conn);
         return false;
     }
 
@@ -201,6 +204,7 @@ bool CheckAlreayJoinName(LoginStruct UserData)
 
     if (mysql_query(&conn, query.c_str())) {
         cout << "Error in the query execution" << endl;
+        mysql_close(&conn);
         return false;
     }
 
@@ -209,7 +213,7 @@ bool CheckAlreayJoinName(LoginStruct UserData)
     MYSQL_RES* result = mysql_store_result(&conn);
     if (result && mysql_num_rows(result) > 0) {
         cout  << NickName_str << "' already exists" << endl;
-
+        mysql_close(&conn);
         return false;
     }
 
@@ -236,6 +240,7 @@ bool JoinAccount(LoginStruct UserData)
     if (connection == NULL)
     {
         cout << "mysql connect error : " << mysql_error(&conn) << endl;
+        mysql_close(&conn);
         return false;
     }
     std::string id_str(UserData.id.data(), UserData.id.data() + idSize);
@@ -256,6 +261,7 @@ bool JoinAccount(LoginStruct UserData)
     if (mysql_query(&conn, query.c_str())) {
         cout << "Error Insert Data" << endl;
         cerr << "mysql_query() failed: " << mysql_error(&conn) << endl;
+        mysql_close(&conn);
         return false;
     }
 
@@ -278,6 +284,7 @@ bool CheckRightPassword(LoginStruct UserData)
     if (connection == NULL)
     {
         cout << "mysql connect error : " << mysql_error(&conn) << endl;
+        mysql_close(&conn);
         return false;
     }
 
@@ -290,6 +297,7 @@ bool CheckRightPassword(LoginStruct UserData)
 
     if (mysql_query(&conn, query.c_str())) {
         cout << "Error in the query execution" << endl;
+        mysql_close(&conn);
         return false;
     }
 
@@ -297,19 +305,22 @@ bool CheckRightPassword(LoginStruct UserData)
     MYSQL_RES* result = mysql_store_result(&conn);
     if (!result) {
         std::cout << "Error storing the result from the query" << std::endl;
+        mysql_close(&conn);
         return false;
     }
 
-    int num_fields = mysql_num_fields(result);
-    MYSQL_ROW row;
+    std::string pwd_str(UserData.pwd.data(), UserData.pwd.data() + pwdSize);
+    MYSQL_ROW row = mysql_fetch_row(result);
 
-    while ((row = mysql_fetch_row(result))) {
-        for (int i = 0; i < num_fields; i++) {
-            // Access the data fields in the row
-            std::cout << "Column " << i << ": " << row[i] << std::endl;
-            // You can assign the values to the UserData struct or process them as needed
-        }
+
+    if (row[i] != pwd_str)
+    {
+        std::cout << "Wrong Password" << std::endl;
+        mysql_close(&conn);
+        return false;
     }
+
+
 
     //// MySQL 연결 해제
     mysql_close(&conn);
