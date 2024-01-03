@@ -294,7 +294,7 @@ bool CheckPassword(LoginStruct UserData)
     }
 
 
-    MYSQL_RES* result = mysql_store_result(conn);
+    MYSQL_RES* result = mysql_store_result(&conn);
     if (!result) {
         std::cout << "Error storing the result from the query" << std::endl;
         return false;
