@@ -159,7 +159,7 @@ bool CheckAlreayJoin(LoginStruct UserData)
     // Retrieve the result set (if needed) and check if any rows are returned
     MYSQL_RES* result = mysql_store_result(&conn);
     if (result && mysql_num_rows(result) > 0) {
-        cout << "User with ID '" << id << "' already exists" << endl;
+        cout << "User with ID '" << id_str << "' already exists" << endl;
         
         return false;
     }
