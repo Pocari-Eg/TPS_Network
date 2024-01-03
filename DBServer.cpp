@@ -264,7 +264,7 @@ bool JoinAccount(LoginStruct UserData)
     mysql_close(&conn);
     return true;
 }
-bool CheckPassword(LoginStruct UserData)
+bool CheckRightPassword(LoginStruct UserData)
 {
     MYSQL* connection = NULL, conn;
     MYSQL_RES* sql_result;
