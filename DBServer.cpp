@@ -312,7 +312,7 @@ bool CheckRightPassword(LoginStruct UserData)
     std::string pwd_str(UserData.pwd.data(), UserData.pwd.data() + pwdSize);
     MYSQL_ROW row = mysql_fetch_row(result);
 
-
+    //0 : id, 1 : pwd, 2 : Nickname, 3 : Lv 
     if (row[1] != pwd_str)
     {
         std::cout << "Wrong Password" << std::endl;
