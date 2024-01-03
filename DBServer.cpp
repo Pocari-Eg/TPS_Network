@@ -150,16 +150,21 @@ bool CheckAlreayJoin(LoginStruct UserData)
     std::string id_str(UserData.id.data(), UserData.id.data() + idSize);
     query += id_str + "'";
 
-    cout << query <<endl;
     if (mysql_query(&conn, query.c_str())) {
-        cout << "Already join User" << endl;
+        cout << "Error in the query execution" << endl;
         return false;
     }
 
   
+    // Retrieve the result set (if needed) and check if any rows are returned
+    MYSQL_RES* result = mysql_store_result(&conn);
+    if (result && mysql_num_rows(result) > 0) {
+        cout << "User with ID '" << id << "' already exists" << endl;
+        
+        return false;
+    }
 
-
-    cout << "No Join User" << endl;
+    cout << "No Join ID" << endl;
 
     //// MySQL 연결 해제
     mysql_close(&conn);
