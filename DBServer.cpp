@@ -193,7 +193,7 @@ bool CheckAlreayJoinName(LoginStruct UserData)
 
 
     // 특정 id를 사용하여 데이터 조회
-    string query = "SELECT * FROM UserTable WHERE id = '";
+    string query = "SELECT * FROM UserTable WHERE Nick = '";
 
     std::string NickName_str(UserData.NickName.data(), UserData.NickName.data() + nickNameSize);
     query += NickName_str + "'";
