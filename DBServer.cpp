@@ -22,7 +22,8 @@ struct LoginStruct
 #define TB_NAME "UserTable"
 
 LoginStruct deserialize(const vector<char>& buffer);
-bool CheckAlreayJoin(LoginStruct UserData);
+bool CheckAlreayJoinID(LoginStruct UserData);
+bool CheckAlreayJoinName(LoginStruct UserData);
 bool JoinAccount(LoginStruct UesrData);
 
 string Login_Join(LoginStruct UesrData, std::string NickName);
@@ -125,7 +126,7 @@ LoginStruct deserialize(const vector<char>& buffer) {
 #pragma endregion serialize
 
 
-bool CheckAlreayJoin(LoginStruct UserData)
+bool CheckAlreayJoinID(LoginStruct UserData)
 {
     
     MYSQL* connection =NULL,conn;
@@ -169,6 +170,52 @@ bool CheckAlreayJoin(LoginStruct UserData)
     //// MySQL 연결 해제
     mysql_close(&conn);
     
+
+    return true;
+}
+bool CheckAlreayJoinName(LoginStruct UserData)
+{
+
+    MYSQL* connection = NULL, conn;
+    MYSQL_RES* sql_result;
+    MYSQL_ROW sql_row;
+    int query_stat;
+
+    mysql_init(&conn);
+
+
+    connection = mysql_real_connect(&conn, DB_HOST, DB_USER, DB_PWD, DB_NAME, 3306, (char*)NULL, 0);
+    if (connection == NULL)
+    {
+        cout << "mysql connect error : " << mysql_error(&conn) << endl;
+        return false;
+    }
+
+
+    // 특정 id를 사용하여 데이터 조회
+    string query = "SELECT * FROM UserTable WHERE id = '";
+
+    std::string NickName_str(UserData.NickName.data(), UserData.NickName.data() + nickNameSize);
+    query += NickName_str + "'";
+
+    if (mysql_query(&conn, query.c_str())) {
+        cout << "Error in the query execution" << endl;
+        return false;
+    }
+
+
+    // Retrieve the result set (if needed) and check if any rows are returned
+    MYSQL_RES* result = mysql_store_result(&conn);
+    if (result && mysql_num_rows(result) > 0) {
+        cout  << NickName_str << "' already exists" << endl;
+
+        return false;
+    }
+
+
+    //// MySQL 연결 해제
+    mysql_close(&conn);
+
 
     return true;
 }
@@ -223,9 +270,13 @@ string Login_Join(LoginStruct UesrData, std::string NickName)
 
         //true이면 데이터가 없으므로 가입 할 수 있다.
         //false이면 연결이 안되거나 이미 가입정보가 있어 가입이 안된다.
-        if (!CheckAlreayJoin(UesrData))
+        if (!CheckAlreayJoinID(UesrData))
         {
-            return "AlreayJoin";
+            return "AlreayJoinID";
+        }
+        if (!CheckAlreayJoinName(UesrData))
+        {
+            return "AlreayJoinName";
         }
 
         if (!JoinAccount(UesrData))
