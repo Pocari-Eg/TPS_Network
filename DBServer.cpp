@@ -27,6 +27,7 @@ bool CheckAlreayJoinName(LoginStruct UserData);
 bool JoinAccount(LoginStruct UesrData);
 bool CheckRightPassword(LoginStruct UserData);
 
+string GetNickName(LoginStruct UserData);
 string Login_Join(LoginStruct UesrData, std::string NickName);
 
 int idSize = 0;
@@ -328,6 +329,56 @@ bool CheckRightPassword(LoginStruct UserData)
 
     return true;
 }
+string GetNickName(LoginStruct UserData)
+{
+    MYSQL* connection = NULL, conn;
+    MYSQL_RES* sql_result;
+    MYSQL_ROW sql_row;
+    int query_stat;
+
+    mysql_init(&conn);
+
+
+    connection = mysql_real_connect(&conn, DB_HOST, DB_USER, DB_PWD, DB_NAME, 3306, (char*)NULL, 0);
+    if (connection == NULL)
+    {
+        cout << "mysql connect error : " << mysql_error(&conn) << endl;
+        mysql_close(&conn);
+        return false;
+    }
+
+
+    // 특정 id를 사용하여 데이터 조회
+    string query = "SELECT * FROM UserTable WHERE id = '";
+
+    std::string id_str(UserData.id.data(), UserData.id.data() + idSize);
+    query += id_str + "'";
+
+    if (mysql_query(&conn, query.c_str())) {
+        cout << "Error in the query execution" << endl;
+        mysql_close(&conn);
+        return  return "Error";;
+    }
+
+
+    MYSQL_RES* result = mysql_store_result(&conn);
+    if (!result) {
+        std::cout << "Error storing the result from the query" << std::endl;
+        mysql_close(&conn);
+        return  return "Error";;
+    }
+
+    MYSQL_ROW row = mysql_fetch_row(result);
+
+
+
+
+    //// MySQL 연결 해제
+    mysql_close(&conn);
+
+
+    return row[2];
+}
 string Login_Join(LoginStruct UesrData, std::string NickName)
 {
     //가입 할 때
@@ -359,10 +410,11 @@ string Login_Join(LoginStruct UesrData, std::string NickName)
         }
         if (!CheckRightPassword(UesrData))
         {
+
             return "PasswordError";
         }
 
-
-       return "Success";
+        //성공이면 접속한 계정의 닉네임을 전달 해줌.
+       return GetNickName();
     }
 }
