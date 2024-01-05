@@ -344,7 +344,7 @@ string GetNickName(LoginStruct UserData)
     {
         cout << "mysql connect error : " << mysql_error(&conn) << endl;
         mysql_close(&conn);
-        return false;
+        return "Error";;
     }
 
 
@@ -357,7 +357,7 @@ string GetNickName(LoginStruct UserData)
     if (mysql_query(&conn, query.c_str())) {
         cout << "Error in the query execution" << endl;
         mysql_close(&conn);
-        return  return "Error";;
+        return "Error";;
     }
 
 
@@ -365,7 +365,7 @@ string GetNickName(LoginStruct UserData)
     if (!result) {
         std::cout << "Error storing the result from the query" << std::endl;
         mysql_close(&conn);
-        return  return "Error";;
+        return "Error";;
     }
 
     MYSQL_ROW row = mysql_fetch_row(result);
