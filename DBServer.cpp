@@ -415,6 +415,6 @@ string Login_Join(LoginStruct UesrData, std::string NickName)
         }
 
         //성공이면 접속한 계정의 닉네임을 전달 해줌.
-       return GetNickName();
+       return GetNickName(UesrData);
     }
 }
