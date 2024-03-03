@@ -135,7 +135,7 @@ private:
 		Session* session = new Session();
 		shared_ptr<asio::ip::tcp::socket> sock(new asio::ip::tcp::socket(ios));
 		session->sock = sock;
-		gate.async_accept(*sock, session->ep, bind(&Server::OnAccept, this, _1, session));
+		gate.async_accept(*sock, session->ep, bind(&Server::OnAccept, this, boost::placeholders:: boost::placeholders::_1, session));
 	}
 
 	void OnAccept(const system::error_code& ec, Session* session)
@@ -209,7 +209,7 @@ private:
 				break;
 			case Code::INVALID:
 				session->sbuf = "유효하지 않은 명령어 입니다";
-				session->sock->async_write_some(asio::buffer(session->sbuf), bind(&Server::OnSend, this, _1));
+				session->sock->async_write_some(asio::buffer(session->sbuf), bind(&Server::OnSend, this,  boost::placeholders::_1));
 				break;
 			}
 		}
@@ -223,7 +223,7 @@ private:
 			else
 			{
 				session->sbuf = "Register your ID first through :set";
-				session->sock->async_write_some(asio::buffer(session->sbuf), bind(&Server::OnSend, this, _1));
+				session->sock->async_write_some(asio::buffer(session->sbuf), bind(&Server::OnSend, this,  boost::placeholders::_1));
 			}
 		}
 	}
@@ -284,7 +284,7 @@ private:
 		string message = ":hit " + std::to_string(damage);
 		sessions[index]->sbuf = message;
 		sessions[index]->sock->async_write_some(asio::buffer(sessions[index]->sbuf),
-			bind(&Server::OnSend, this, _1));
+			bind(&Server::OnSend, this,  boost::placeholders::_1));
 		
 
 	}
@@ -298,7 +298,7 @@ private:
 			if (temp.compare(sessions[i]->id) == 0)
 			{
 				session->sbuf = "set falied: [" + temp + "]는 이미 사용중인 아이디 입니다";
-				session->sock->async_write_some(asio::buffer(session->sbuf), bind(&Server::OnSend, this, _1));
+				session->sock->async_write_some(asio::buffer(session->sbuf), bind(&Server::OnSend, this,  boost::placeholders::_1));
 				return;
 			}
 		}
@@ -315,7 +315,7 @@ private:
 			return a->id < b->id;
 			});
 
-		session->sock->async_write_some(asio::buffer(session->sbuf), bind(&Server::OnSend, this, _1));
+		session->sock->async_write_some(asio::buffer(session->sbuf), bind(&Server::OnSend, this,  boost::placeholders::_1));
 
 
 
@@ -341,7 +341,7 @@ private:
 			{
 				sessions[i]->sbuf = message;
 				sessions[i]->sock->async_write_some(asio::buffer(sessions[i]->sbuf),
-					bind(&Server::OnSend, this, _1));
+					bind(&Server::OnSend, this,  boost::placeholders::_1));
 			}
 		}
 
@@ -349,7 +349,7 @@ private:
 		if (sendToSenderAsWell)
 		{
 			session->sbuf = message;
-			session->sock->async_write_some(asio::buffer(session->sbuf), bind(&Server::OnSend, this, _1));
+			session->sock->async_write_some(asio::buffer(session->sbuf), bind(&Server::OnSend, this,  boost::placeholders::_1));
 		}
 	}
 
@@ -422,7 +422,7 @@ private:
 				{
 						sessions[i]->sbuf = Data;
 						sessions[i]->sock->async_write_some(asio::buffer(sessions[i]->sbuf),
-							bind(&Server::OnSend, this, _1));
+							bind(&Server::OnSend, this,  boost::placeholders::_1));
 				}
 			}
 	}
