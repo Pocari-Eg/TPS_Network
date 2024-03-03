@@ -135,7 +135,7 @@ private:
 		Session* session = new Session();
 		shared_ptr<asio::ip::tcp::socket> sock(new asio::ip::tcp::socket(ios));
 		session->sock = sock;
-		gate.async_accept(*sock, session->ep, bind(&Server::OnAccept, this, boost::placeholders:: boost::placeholders::_1, session));
+		gate.async_accept(*sock, session->ep, bind(&Server::OnAccept, this,boost::placeholders::_1, session));
 	}
 
 	void OnAccept(const system::error_code& ec, Session* session)
